@@ -1,300 +1,345 @@
+import { router } from "expo-router";
 
-import { router } from 'expo-router';
-import { useState } from 'react';
-
-import {
-KeyboardAvoidingView,
-Platform,
-ScrollView,
-StyleSheet,
-Text,
-View,
-} from 'react-native';
-
-import { AppButton } from '../components/AppButton';
-import { AppInput } from '../components/AppInput';
-import SRVBackground from '../components/SRVBackground';
+import { useState } from "react";
 
 import {
-colors,
-radius,
-spacing,
-} from '../constants/theme';
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 
-import { useAuth } from '../context/AuthContext';
+import Ionicons from "@expo/vector-icons/Ionicons";
+
+import { AppButton } from "../components/AppButton";
+import { AppInput } from "../components/AppInput";
+import { FormCheckbox } from "../components/FormCheckbox";
+import { PasswordInput } from "../components/PasswordInput";
+import SRVBackground from "../components/SRVBackground";
+
+import { colors, radius, spacing } from "../constants/theme";
+
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginScreen() {
-const { signIn } = useAuth();
+    const { signIn } = useAuth();
 
-const [email, setEmail] = useState('');
-const [password, setPassword] = useState('');
+    const [email, setEmail] = useState("");
 
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState('');
+    const [password, setPassword] = useState("");
 
-const handleLogin = async () => {
-    setError('');
+    const [rememberMe, setRememberMe] = useState(true);
 
-    if (!email.trim() || !password) {
-    setError('Please enter your email and password.');
-    return;
-    }
+    const [loading, setLoading] = useState(false);
 
-    try {
-    setLoading(true);
+    const [error, setError] = useState("");
 
-    await signIn(
-        email.trim(),
-        password,
-    );
-    } catch (error) {
-    setError(
-        error instanceof Error
-        ? error.message
-        : 'Unable to log in.',
-    );
-    } finally {
-    setLoading(false);
-    }
-};
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-return (
-    <SRVBackground>
-    <KeyboardAvoidingView
-        style={styles.container}
-        behavior={
-        Platform.OS === 'ios'
-            ? 'padding'
-            : undefined
+    const handleLogin = async () => {
+        setError("");
+
+        if (!email.trim() || !password) {
+            setError("Please enter your email and password.");
+
+            return;
         }
-    >
-        <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        >
-        {/* BRAND */}
-        <View style={styles.brandBlock}>
-            <View style={styles.logo}>
-            <Text style={styles.logoText}>
-                SRV
-            </Text>
-            </View>
 
-            <Text style={styles.eyebrow}>
-            SMART RENTAL VAULT
-            </Text>
-        </View>
+        if (!emailValid) {
+            setError("Please enter a valid email address.");
 
-        {/* HEADING */}
-        <View style={styles.headingBlock}>
-            <Text style={styles.title}>
-            Welcome back.
-            </Text>
+            return;
+        }
 
-            <Text style={styles.subtitle}>
-            Sign in to access your Smart Rental
-            Vault account.
-            </Text>
-        </View>
+        try {
+            setLoading(true);
 
-        {/* FORM */}
-        <View style={styles.form}>
-            <AppInput
-            label="Email"
-            value={email}
-            onChangeText={(value) => {
-                setEmail(value);
-                setError('');
-            }}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            placeholder="you@example.com"
-            />
+            await signIn(email.trim(), password, rememberMe);
+        } catch (error) {
+            setError(
+                error instanceof Error ? error.message : "Unable to log in.",
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
-            <AppInput
-            label="Password"
-            value={password}
-            onChangeText={(value) => {
-                setPassword(value);
-                setError('');
-            }}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="password"
-            placeholder="Enter your password"
-            />
-
-            {/* ERROR */}
-            {error ? (
-            <View style={styles.errorBox}>
-                <Text style={styles.errorText}>
-                {error}
-                </Text>
-            </View>
-            ) : null}
-
-            {/* LOGIN */}
-            <AppButton
-            title="Log in"
-            onPress={handleLogin}
-            loading={loading}
-            />
-        </View>
-
-        {/* REGISTER */}
-        <View style={styles.footer}>
-            <Text style={styles.footerText}>
-            Don't have an account?
-            </Text>
-
-            <Text
-            style={styles.link}
-            onPress={() => router.replace('/register')}
+    return (
+        <SRVBackground>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
-            Create an account
-            </Text>
-        </View>
-        </ScrollView>
-    </KeyboardAvoidingView>
-    </SRVBackground>
-);
+                <ScrollView
+                    contentContainerStyle={styles.content}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* BRAND */}
+                    <View style={styles.brandBlock}>
+                        <View style={styles.logo}>
+                            <Text style={styles.logoText}>SRV</Text>
+                        </View>
+
+                        <Text style={styles.eyebrow}>SMART RENTAL VAULT</Text>
+                    </View>
+
+                    {/* HEADING */}
+                    <View style={styles.headingBlock}>
+                        <Text style={styles.title}>Welcome back.</Text>
+
+                        <Text style={styles.subtitle}>
+                            Sign in to access your Smart Rental Vault account.
+                        </Text>
+                    </View>
+
+                    {/* FORM */}
+                    <View style={styles.form}>
+                        <AppInput
+                            label="Email"
+                            value={email}
+                            onChangeText={(value) => {
+                                setEmail(value);
+                                setError("");
+                            }}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            rightElement={
+                                email.length > 0 ? (
+                                    <Ionicons
+                                        name={
+                                            emailValid
+                                                ? "checkmark-circle"
+                                                : "alert-circle"
+                                        }
+                                        size={20}
+                                        color={
+                                            emailValid
+                                                ? colors.success
+                                                : colors.danger
+                                        }
+                                        style={styles.inputIndicator}
+                                    />
+                                ) : null
+                            }
+                        />
+
+                        <PasswordInput
+                            label="Password"
+                            value={password}
+                            onChangeText={(value) => {
+                                setPassword(value);
+                                setError("");
+                            }}
+                            autoComplete="password"
+                            placeholder="Enter your password"
+                        />
+
+                        {/* OPTIONS */}
+                        <View style={styles.optionsRow}>
+                            <FormCheckbox
+                                checked={rememberMe}
+                                onPress={() => setRememberMe((value) => !value)}
+                                label="Remember me"
+                            />
+
+                            <Text
+                                style={styles.forgot}
+                                onPress={() => {
+                                    setError(
+                                        "Password recovery will be added next.",
+                                    );
+                                }}
+                            >
+                                Forgot password?
+                            </Text>
+                        </View>
+
+                        {/* ERROR */}
+                        {error ? (
+                            <View style={styles.errorBox}>
+                                <Ionicons
+                                    name="alert-circle-outline"
+                                    size={18}
+                                    color={colors.danger}
+                                />
+
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        ) : null}
+
+                        {/* LOGIN */}
+                        <AppButton
+                            title="Log in"
+                            onPress={handleLogin}
+                            loading={loading}
+                        />
+                    </View>
+
+                    {/* REGISTER */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>
+                            Don't have an account?
+                        </Text>
+
+                        <Text
+                            style={styles.link}
+                            onPress={() => router.replace("/register")}
+                        >
+                            Create an account
+                        </Text>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SRVBackground>
+    );
 }
 
 const styles = StyleSheet.create({
-container: {
-    flex: 1,
-},
+    container: {
+        flex: 1,
+    },
 
-content: {
-    flexGrow: 1,
-    justifyContent: 'center',
+    content: {
+        flexGrow: 1,
+        justifyContent: "center",
 
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 40,
-},
+        paddingHorizontal: spacing.lg,
 
-/* BRAND */
+        paddingVertical: 40,
+    },
 
-brandBlock: {
-    alignItems: 'flex-start',
-    gap: 12,
+    brandBlock: {
+        alignItems: "flex-start",
+        gap: 12,
+        marginBottom: 30,
+    },
 
-    marginBottom: 30,
-},
+    logo: {
+        width: 68,
+        height: 68,
 
-logo: {
-    width: 68,
-    height: 68,
+        borderRadius: radius.md,
 
-    borderRadius: radius.md,
+        backgroundColor: colors.surface,
 
-    backgroundColor: colors.surface,
+        borderWidth: 1.5,
+        borderColor: colors.gold,
 
-    borderWidth: 1.5,
-    borderColor: colors.gold,
+        alignItems: "center",
+        justifyContent: "center",
+    },
 
-    alignItems: 'center',
-    justifyContent: 'center',
-},
+    logoText: {
+        color: colors.goldLight,
+        fontSize: 18,
+        fontWeight: "900",
+        letterSpacing: 1.5,
+    },
 
-logoText: {
-    color: colors.goldLight,
+    eyebrow: {
+        color: colors.gold,
 
-    fontSize: 18,
-    fontWeight: '900',
+        fontSize: 11,
+        fontWeight: "900",
 
-    letterSpacing: 1.5,
-},
+        letterSpacing: 2.3,
+    },
 
-eyebrow: {
-    color: colors.gold,
+    headingBlock: {
+        gap: 8,
+        marginBottom: 26,
+    },
 
-    fontSize: 11,
-    fontWeight: '900',
+    title: {
+        color: colors.textStrong,
 
-    letterSpacing: 2.3,
-},
+        fontSize: 34,
+        lineHeight: 40,
 
-/* HEADING */
+        fontWeight: "900",
+    },
 
-headingBlock: {
-    gap: 8,
+    subtitle: {
+        color: colors.muted,
 
-    marginBottom: 26,
-},
+        fontSize: 15,
+        lineHeight: 23,
 
-title: {
-    color: colors.textStrong,
+        maxWidth: 360,
+    },
 
-    fontSize: 34,
-    lineHeight: 40,
+    form: {
+        gap: spacing.md,
+    },
 
-    fontWeight: '900',
-},
+    inputIndicator: {
+        marginRight: 14,
+    },
 
-subtitle: {
-    color: colors.muted,
+    optionsRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
 
-    fontSize: 15,
-    lineHeight: 23,
+    forgot: {
+        color: colors.goldLight,
+        fontSize: 13,
+        fontWeight: "700",
+    },
 
-    maxWidth: 360,
-},
+    errorBox: {
+        flexDirection: "row",
+        alignItems: "center",
 
-/* FORM */
+        gap: 8,
 
-form: {
-    gap: spacing.md,
-},
+        backgroundColor: colors.dangerSoft,
 
-errorBox: {
-    backgroundColor: colors.dangerSoft,
+        borderWidth: 1,
+        borderColor: colors.danger,
 
-    borderWidth: 1,
-    borderColor: colors.danger,
+        borderRadius: radius.md,
 
-    borderRadius: radius.md,
+        padding: spacing.md,
+    },
 
-    padding: spacing.md,
-},
+    errorText: {
+        flex: 1,
 
-errorText: {
-    color: colors.danger,
+        color: colors.danger,
 
-    fontSize: 14,
-    lineHeight: 20,
+        fontSize: 14,
+        lineHeight: 20,
 
-    fontWeight: '600',
-},
+        fontWeight: "600",
+    },
 
-/* FOOTER */
+    footer: {
+        flexDirection: "row",
 
-footer: {
-    flexDirection: 'row',
+        justifyContent: "center",
+        alignItems: "center",
 
-    justifyContent: 'center',
-    alignItems: 'center',
+        gap: 6,
 
-    gap: 6,
+        marginTop: spacing.xl,
+    },
 
-    marginTop: spacing.xl,
-},
+    footerText: {
+        color: colors.muted,
+        fontSize: 14,
+    },
 
-footerText: {
-    color: colors.muted,
-
-    fontSize: 14,
-},
-
-link: {
-    color: colors.goldLight,
-
-    fontSize: 14,
-
-    fontWeight: '800',
-},
+    link: {
+        color: colors.goldLight,
+        fontSize: 14,
+        fontWeight: "800",
+    },
 });
