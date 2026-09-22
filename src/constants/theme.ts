@@ -1,17 +1,55 @@
+/**
+ * Smart Rental Vault (SRV)
+ * Luxury design system
+ * Purple + Black + Gold
+ */
+
 export const colors = {
-    background: '#F6F8FC',
-    surface: '#FFFFFF',
-    primary: '#1F6FEB',
-    primaryDark: '#1557B0',
-    text: '#172033',
-    muted: '#6B7485',
-    border: '#E4E8F0',
-    success: '#1F9D68',
-    warning: '#D99100',
-    danger: '#D64545',
-    softBlue: '#EAF2FF',
-    softGreen: '#E9F8F1',
-    softYellow: '#FFF6DD',
+    // Main surfaces
+    background: "#09070D",
+    surface: "#15111F",
+    surfaceElevated: "#1C1628",
+    surfaceSoft: "#211A2E",
+
+    // Brand
+    primary: "#8B5CF6",
+    primaryDark: "#6D28D9",
+    primarySoft: "#24173D",
+
+    // Luxury / premium accent
+    gold: "#D4AF37",
+    goldLight: "#F1D77A",
+    goldSoft: "#2D2510",
+
+    // Text
+    text: "#F8F4FF",
+    textStrong: "#FFFFFF",
+    muted: "#A9A0B8",
+    mutedDark: "#7F758F",
+
+    // Borders
+    border: "#30263D",
+    borderStrong: "#4A3A5E",
+
+    // Status
+    success: "#55D98A",
+    successSoft: "#12301F",
+
+    warning: "#F5C451",
+    warningSoft: "#352A0E",
+
+    danger: "#FB7185",
+    dangerSoft: "#34151D",
+
+    // Compatibility with the original SRV foundation
+    softBlue: "#24173D",
+    softGreen: "#12301F",
+    softYellow: "#352A0E",
+
+    // Utility
+    black: "#000000",
+    white: "#FFFFFF",
+    transparent: "transparent",
 };
 
 export const spacing = {
@@ -27,4 +65,16 @@ export const radius = {
     md: 16,
     lg: 22,
     pill: 999,
-    };
+};
+
+export const gradients = {
+    background: ["#05040A", "#0B0712", "#160D25", "#09060F"] as const,
+
+    primary: ["#6D28D9", "#8B5CF6"] as const,
+
+    luxury: ["#8B5CF6", "#D4AF37"] as const,
+
+    gold: ["#B8860B", "#F1D77A", "#D4AF37"] as const,
+
+    card: ["#211A2E", "#15111F"] as const,
+};
