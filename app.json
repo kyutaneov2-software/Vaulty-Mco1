@@ -4,42 +4,61 @@
     "slug": "rental-vault",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Vault_Logo.png",
+
+    "icon": "./assets/images/srv-logo.png",
+
     "scheme": "rentalvault",
+
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#080C12",
+
+    "backgroundColor": "#09070D",
+
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true
     },
+
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#080C12",
-        "foregroundImage": "./assets/images/Vault_Logo.png"
+        "backgroundColor": "#09070D",
+        "foregroundImage": "./assets/images/srv-logo.png"
       },
       "predictiveBackGestureEnabled": false
     },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
+    
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#080C12",
-          "image": "./assets/images/Vault_Logo.png",
-          "imageWidth": 200,
+          "backgroundColor": "#09070D",
+          "image": "./assets/images/srv-logo.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
           "dark": {
-            "backgroundColor": "#080C12"
+            "backgroundColor": "#09070D",
+            "image": "./assets/images/srv-logo.png"
           }
         }
       ],
+    
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Vaulty to access your photos so you can choose a profile picture."
+        }
+      ],
+    
       "expo-secure-store",
       "expo-asset"
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

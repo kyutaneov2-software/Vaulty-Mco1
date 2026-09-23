@@ -1,22 +1,16 @@
 import { Stack } from "expo-router";
-
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-
 import { StatusBar } from "expo-status-bar";
 
-import { AuthProvider, useAuth } from "../context/AuthContext";
 
+import { AuthProvider, useAuth } from "../context/AuthContext";
 import { colors } from "../constants/theme";
+import SRVSplash from "../components/SRVSplash";
 
 function RootNavigator() {
     const { user, isLoading } = useAuth();
 
     if (isLoading) {
-        return (
-            <View style={styles.loading}>
-                <ActivityIndicator size="large" color={colors.gold} />
-            </View>
-        );
+        return <SRVSplash />;
     }
 
     return (
@@ -26,18 +20,15 @@ function RootNavigator() {
             <Stack
                 screenOptions={{
                     headerShown: false,
-
                     contentStyle: {
                         backgroundColor: colors.background,
                     },
                 }}
             >
-                {/* AUTHENTICATED APP */}
                 <Stack.Protected guard={!!user}>
                     <Stack.Screen name="(app)" />
                 </Stack.Protected>
 
-                {/* LOGIN / REGISTER */}
                 <Stack.Protected guard={!user}>
                     <Stack.Screen name="login" />
                     <Stack.Screen name="register" />
@@ -54,13 +45,3 @@ export default function RootLayout() {
         </AuthProvider>
     );
 }
-
-const styles = StyleSheet.create({
-    loading: {
-        flex: 1,
-        backgroundColor: colors.background,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-});

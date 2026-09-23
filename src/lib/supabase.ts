@@ -21,17 +21,15 @@ if (!supabasePublishableKey) {
  */
 let rememberSession = true;
 
-/*
- * In-memory storage used when
- * "Remember me" is disabled.
- */
 const memoryStorage = new Map<string, string>();
 
-export function setRememberSession(remember: boolean) {
+export async function setRememberSession(remember: boolean) {
     rememberSession = remember;
 
     if (!remember) {
         memoryStorage.clear();
+
+        await AsyncStorage.removeItem("supabase.auth.token");
     }
 }
 

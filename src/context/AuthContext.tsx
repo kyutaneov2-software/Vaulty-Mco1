@@ -40,7 +40,7 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 async function getProfile(session: Session): Promise<User> {
     const { data, error } = await supabase
         .from("profiles")
-        .select("id, name, points")
+        .select("id, name")
         .eq("id", session.user.id)
         .single();
 
@@ -52,7 +52,6 @@ async function getProfile(session: Session): Promise<User> {
         id: data.id,
         name: data.name,
         email: session.user.email ?? "",
-        points: data.points,
     };
 }
 
@@ -112,11 +111,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
             }
 
             /*
-             * Do not make the profile request directly
+             * Defer the profile query so we don't
+             * perform another Supabase request directly
              * inside onAuthStateChange.
-             *
-             * Defer it so Supabase can finish its
-             * internal auth operation first.
              */
             setTimeout(() => {
                 if (!mounted) {
@@ -174,16 +171,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
             throw new Error("Please enter a valid email address.");
         }
 
-        /*
-         * Tell the local session storage whether
-         * this registration should persist the session.
-         */
         setRememberSession(rememberMe);
 
         const { data, error } = await supabase.auth.signUp({
             email: cleanEmail,
             password,
-
             options: {
                 data: {
                     name: cleanName,
@@ -196,9 +188,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
 
         /*
-         * Confirm Email is disabled in our current
-         * development configuration, so a session
-         * should be returned immediately.
+         * Confirm Email is currently disabled
+         * for our development environment.
          */
         if (!data.session) {
             throw new Error(
@@ -227,10 +218,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
             throw new Error("Please enter a valid email address.");
         }
 
-        /*
-         * Configure session persistence before
-         * Supabase creates the new session.
-         */
         setRememberSession(rememberMe);
 
         const { error } = await supabase.auth.signInWithPassword({
@@ -239,9 +226,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
         });
 
         if (error) {
-            /*
-             * Don't expose unnecessary auth details.
-             */
             throw new Error("Invalid email or password.");
         }
     };
