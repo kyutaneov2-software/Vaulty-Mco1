@@ -2,24 +2,28 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { AppButton } from "../components/AppButton";
 import { AppInput } from "../components/AppInput";
 import { FormCheckbox } from "../components/FormCheckbox";
 import { PasswordInput } from "../components/PasswordInput";
 import SRVBackground from "../components/SRVBackground";
-import { colors, radius, spacing } from "../constants/theme";
+import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
+import { authStyles as styles } from "../styles/auth.styles";
 
+/* =========================================================
+   FUNCTION: getLoginErrorMessage
+
+   Converts authentication errors into user-friendly
+   messages for the Vaulty login screen.
+========================================================= */
 const getLoginErrorMessage = (error: unknown) => {
     const message =
         error instanceof Error ? error.message : String(error ?? "");
@@ -40,21 +44,89 @@ const getLoginErrorMessage = (error: unknown) => {
         return "This account still requires email confirmation.";
     }
 
+    if (
+        normalized.includes("too many requests") ||
+        normalized.includes("rate limit")
+    ) {
+        return "Too many login attempts. Please wait a moment and try again.";
+    }
+
     return message || "Unable to log in. Please try again.";
 };
 
+/* =========================================================
+   FUNCTION: LoginScreen
+
+   Renders the Vaulty login screen and routes the user
+   through the appropriate MFA stage after authentication.
+========================================================= */
 export default function LoginScreen() {
     const { signIn } = useAuth();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(true);
-
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
+    /* =========================================================
+       FUNCTION: handleEmailChange
+
+       Updates the email field and clears the current error.
+    ========================================================= */
+    const handleEmailChange = (value: string) => {
+        setEmail(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handlePasswordChange
+
+       Updates the password field and clears the current error.
+    ========================================================= */
+    const handlePasswordChange = (value: string) => {
+        setPassword(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handleRememberMeToggle
+
+       Toggles whether the authentication session should
+       remain persisted on the current device.
+    ========================================================= */
+    const handleRememberMeToggle = () => {
+        setRememberMe((value) => !value);
+    };
+
+    /* =========================================================
+       FUNCTION: handleForgotPassword
+
+       Temporary recovery entry point.
+       This will navigate to the Vaulty recovery flow
+       once recovery codes are implemented.
+    ========================================================= */
+    const handleForgotPassword = () => {
+        setError("Account recovery will be added next.");
+    };
+
+    /* =========================================================
+       FUNCTION: handleRegisterNavigation
+
+       Navigates the user to the account registration screen.
+    ========================================================= */
+    const handleRegisterNavigation = () => {
+        router.replace("/register");
+    };
+
+    /* =========================================================
+       FUNCTION: handleLogin
+
+       Validates credentials, authenticates the user,
+       and routes according to the user's MFA state.
+    ========================================================= */
     const handleLogin = async () => {
         setError("");
 
@@ -77,26 +149,24 @@ export default function LoginScreen() {
                 rememberMe,
             );
 
-            /**
-             * A returning user with a verified TOTP factor
-             * must complete the 6-digit authenticator challenge.
+            /*
+             * Existing verified TOTP factor.
              */
             if (nextStage === "challenge") {
                 router.replace("/mfa-challenge");
                 return;
             }
 
-            /**
-             * A user without a TOTP factor needs to enroll
-             * an authenticator before accessing Vaulty.
+            /*
+             * User has no verified TOTP factor.
              */
             if (nextStage === "setup") {
                 router.replace("/setup-mfa");
                 return;
             }
 
-            /**
-             * Already authenticated with AAL2.
+            /*
+             * User is already fully authenticated.
              */
             if (nextStage === "ready") {
                 router.replace("/(app)");
@@ -113,115 +183,62 @@ export default function LoginScreen() {
 
     return (
         <SRVBackground>
-            {/* Ambient background glow */}
-            <View
-                pointerEvents="none"
-                style={[styles.glow, styles.glowPurple]}
-            />
-
-            <View pointerEvents="none" style={[styles.glow, styles.glowGold]} />
-
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={styles.loginContent}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
                     {/* =================================================
-                        BRAND HERO
+                        PAGE HEADING
                     ================================================= */}
-                    <View style={styles.hero}>
-                        <LinearGradient
-                            colors={[
-                                "rgba(139,92,246,0.22)",
-                                "rgba(212,175,55,0.10)",
-                                "rgba(21,17,31,0.96)",
-                            ]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.logoShell}
-                        >
-                            <View style={styles.logoInner}>
-                                <Image
-                                    source={require("../../assets/images/srv-logo.png")}
-                                    style={styles.logo}
-                                    resizeMode="contain"
-                                />
-                            </View>
+                    <View style={styles.loginHeading}>
+                        <Text style={styles.loginEyebrow}>WELCOME BACK</Text>
 
-                            <View style={styles.logoAccent}>
-                                <View style={styles.accentDot} />
-
-                                <Text style={styles.accentText}>
-                                    SMART RENTAL VAULT
-                                </Text>
-                            </View>
-                        </LinearGradient>
-                    </View>
-
-                    {/* =================================================
-                        HEADING
-                    ================================================= */}
-                    <View style={styles.headingBlock}>
-                        <Text style={styles.eyebrow}>WELCOME BACK</Text>
-
-                        <Text style={styles.title}>
+                        <Text style={styles.loginTitle}>
                             Access your{" "}
-                            <Text style={styles.titleAccent}>Vaulty</Text>.
+                            <Text style={styles.loginTitleAccent}>Vaulty</Text>.
                         </Text>
 
-                        <Text style={styles.subtitle}>
+                        <Text style={styles.loginSubtitle}>
                             Sign in to manage your storage, wallet, rentals, and
                             secure vault access.
                         </Text>
                     </View>
 
                     {/* =================================================
-                        LOGIN CARD
+                        LOGIN FORM
                     ================================================= */}
-                    <LinearGradient
-                        colors={[
-                            "rgba(255,255,255,0.055)",
-                            "rgba(139,92,246,0.045)",
-                            "rgba(9,7,13,0.92)",
-                        ]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.formCard}
-                    >
-                        <View style={styles.cardHighlight} />
-
-                        {/* Account section */}
-                        <View style={styles.sectionHeader}>
-                            <View style={styles.sectionIcon}>
+                    <View style={styles.loginFormCard}>
+                        <View style={styles.loginCardHeader}>
+                            <View style={styles.loginSectionIcon}>
                                 <Ionicons
                                     name="person-outline"
-                                    size={16}
-                                    color={colors.goldLight}
+                                    size={17}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
                             <View>
-                                <Text style={styles.sectionTitle}>Sign in</Text>
+                                <Text style={styles.loginSectionTitle}>
+                                    Sign in
+                                </Text>
 
-                                <Text style={styles.sectionSubtitle}>
+                                <Text style={styles.loginSectionSubtitle}>
                                     Enter your Vaulty credentials
                                 </Text>
                             </View>
                         </View>
 
-                        <View style={styles.form}>
+                        <View style={styles.loginForm}>
                             {/* EMAIL */}
                             <AppInput
                                 label="Email"
                                 value={email}
-                                onChangeText={(value) => {
-                                    setEmail(value);
-                                    setError("");
-                                }}
+                                onChangeText={handleEmailChange}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -251,52 +268,43 @@ export default function LoginScreen() {
                             <PasswordInput
                                 label="Password"
                                 value={password}
-                                onChangeText={(value) => {
-                                    setPassword(value);
-                                    setError("");
-                                }}
+                                onChangeText={handlePasswordChange}
                                 autoComplete="password"
                                 placeholder="Enter your password"
                             />
 
                             {/* OPTIONS */}
-                            <View style={styles.optionsRow}>
+                            <View style={styles.loginOptionsRow}>
                                 <FormCheckbox
                                     checked={rememberMe}
-                                    onPress={() =>
-                                        setRememberMe((value) => !value)
-                                    }
+                                    onPress={handleRememberMeToggle}
                                     label="Remember me"
                                 />
 
                                 <Text
-                                    style={styles.forgot}
-                                    onPress={() => {
-                                        setError(
-                                            "Password recovery will be added next.",
-                                        );
-                                    }}
+                                    style={styles.loginForgot}
+                                    onPress={handleForgotPassword}
                                 >
                                     Forgot password?
                                 </Text>
                             </View>
 
-                            {/* SECURITY NOTE */}
-                            <View style={styles.securityCard}>
-                                <View style={styles.securityIcon}>
+                            {/* MFA INFORMATION */}
+                            <View style={styles.loginSecurityCard}>
+                                <View style={styles.loginSecurityIcon}>
                                     <Ionicons
                                         name="shield-checkmark-outline"
-                                        size={17}
-                                        color={colors.goldLight}
+                                        size={18}
+                                        color={colors.primaryLight}
                                     />
                                 </View>
 
-                                <View style={styles.securityContent}>
-                                    <Text style={styles.securityTitle}>
+                                <View style={styles.loginSecurityContent}>
+                                    <Text style={styles.loginSecurityTitle}>
                                         Two-step protection
                                     </Text>
 
-                                    <Text style={styles.securityText}>
+                                    <Text style={styles.loginSecurityText}>
                                         After signing in, you'll verify a
                                         6-digit code from your authenticator
                                         app.
@@ -306,8 +314,8 @@ export default function LoginScreen() {
 
                             {/* ERROR */}
                             {error ? (
-                                <View style={styles.errorBox}>
-                                    <View style={styles.errorIcon}>
+                                <View style={styles.loginErrorBox}>
+                                    <View style={styles.loginErrorIcon}>
                                         <Ionicons
                                             name="alert-circle"
                                             size={16}
@@ -315,14 +323,14 @@ export default function LoginScreen() {
                                         />
                                     </View>
 
-                                    <Text style={styles.errorText}>
+                                    <Text style={styles.loginErrorText}>
                                         {error}
                                     </Text>
                                 </View>
                             ) : null}
 
-                            {/* LOGIN */}
-                            <View style={styles.buttonWrapper}>
+                            {/* LOGIN BUTTON */}
+                            <View style={styles.loginButtonWrapper}>
                                 <AppButton
                                     title="Log in"
                                     onPress={handleLogin}
@@ -330,33 +338,35 @@ export default function LoginScreen() {
                                 />
                             </View>
                         </View>
-                    </LinearGradient>
+                    </View>
 
                     {/* =================================================
-                        REGISTER
+                        REGISTER FOOTER
                     ================================================= */}
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>
+                    <View style={styles.loginFooter}>
+                        <Text style={styles.loginFooterText}>
                             Don't have an account?
                         </Text>
 
                         <Text
-                            style={styles.link}
-                            onPress={() => router.replace("/register")}
+                            style={styles.loginLink}
+                            onPress={handleRegisterNavigation}
                         >
                             Create an account
                         </Text>
                     </View>
 
-                    {/* Security footer */}
-                    <View style={styles.secureFooter}>
+                    {/* =================================================
+                        SECURITY FOOTER
+                    ================================================= */}
+                    <View style={styles.loginSecureFooter}>
                         <Ionicons
                             name="lock-closed-outline"
                             size={13}
                             color={colors.mutedDark}
                         />
 
-                        <Text style={styles.secureFooterText}>
+                        <Text style={styles.loginSecureFooterText}>
                             Protected by Vaulty's secure authentication system.
                         </Text>
                     </View>
@@ -365,339 +375,3 @@ export default function LoginScreen() {
         </SRVBackground>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    content: {
-        flexGrow: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: 34,
-        paddingBottom: 44,
-    },
-
-    /* =================================================
-       AMBIENT BACKGROUND
-    ================================================= */
-
-    glow: {
-        position: "absolute",
-        borderRadius: 999,
-    },
-
-    glowPurple: {
-        width: 240,
-        height: 240,
-        top: -90,
-        right: -80,
-        backgroundColor: colors.primary,
-        opacity: 0.1,
-    },
-
-    glowGold: {
-        width: 180,
-        height: 180,
-        bottom: 40,
-        left: -90,
-        backgroundColor: colors.gold,
-        opacity: 0.06,
-    },
-
-    /* =================================================
-       HERO
-    ================================================= */
-
-    hero: {
-        alignItems: "center",
-        marginBottom: 24,
-    },
-
-    logoShell: {
-        width: 190,
-        minHeight: 118,
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        padding: 10,
-        shadowColor: colors.primary,
-        shadowOffset: {
-            width: 0,
-            height: 12,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 22,
-        elevation: 10,
-    },
-
-    logoInner: {
-        flex: 1,
-        minHeight: 76,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 20,
-        backgroundColor: "rgba(9,7,13,0.72)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.06)",
-    },
-
-    logo: {
-        width: 145,
-        height: 70,
-    },
-
-    logoAccent: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 7,
-        marginTop: 8,
-    },
-
-    accentDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 999,
-        backgroundColor: colors.gold,
-    },
-
-    accentText: {
-        color: colors.muted,
-        fontSize: 9,
-        fontWeight: "900",
-        letterSpacing: 1.7,
-    },
-
-    /* =================================================
-       HEADING
-    ================================================= */
-
-    headingBlock: {
-        marginBottom: 22,
-    },
-
-    eyebrow: {
-        color: colors.gold,
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 2.4,
-        marginBottom: 8,
-    },
-
-    title: {
-        color: colors.textStrong,
-        fontSize: 32,
-        lineHeight: 40,
-        fontWeight: "900",
-    },
-
-    titleAccent: {
-        color: colors.goldLight,
-    },
-
-    subtitle: {
-        color: colors.muted,
-        fontSize: 14,
-        lineHeight: 22,
-        marginTop: 8,
-        maxWidth: 370,
-    },
-
-    /* =================================================
-       CARD
-    ================================================= */
-
-    formCard: {
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.35,
-        shadowRadius: 28,
-        elevation: 12,
-    },
-
-    cardHighlight: {
-        position: "absolute",
-        top: 0,
-        left: 26,
-        right: 26,
-        height: 1,
-        backgroundColor: "rgba(241,215,122,0.32)",
-    },
-
-    sectionHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 11,
-        marginBottom: 18,
-    },
-
-    sectionIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.goldSoft,
-        borderWidth: 1,
-        borderColor: "rgba(212,175,55,0.30)",
-    },
-
-    sectionTitle: {
-        color: colors.textStrong,
-        fontSize: 14,
-        fontWeight: "800",
-    },
-
-    sectionSubtitle: {
-        color: colors.mutedDark,
-        fontSize: 11,
-        marginTop: 2,
-    },
-
-    form: {
-        gap: spacing.md,
-    },
-
-    inputIndicator: {
-        marginRight: 14,
-    },
-
-    /* =================================================
-       OPTIONS
-    ================================================= */
-
-    optionsRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-
-    forgot: {
-        color: colors.goldLight,
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    /* =================================================
-       SECURITY
-    ================================================= */
-
-    securityCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 12,
-        borderRadius: 18,
-        backgroundColor: "rgba(36,23,61,0.58)",
-        borderWidth: 1,
-        borderColor: "rgba(139,92,246,0.22)",
-    },
-
-    securityIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.primarySoft,
-        marginRight: 10,
-    },
-
-    securityContent: {
-        flex: 1,
-    },
-
-    securityTitle: {
-        color: colors.text,
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    securityText: {
-        color: colors.mutedDark,
-        fontSize: 10,
-        lineHeight: 15,
-        marginTop: 2,
-    },
-
-    /* =================================================
-       ERROR
-    ================================================= */
-
-    errorBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 9,
-        padding: 12,
-        borderRadius: 17,
-        backgroundColor: colors.dangerSoft,
-        borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.55)",
-    },
-
-    errorIcon: {
-        width: 28,
-        height: 28,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(251,113,133,0.10)",
-    },
-
-    errorText: {
-        flex: 1,
-        color: colors.danger,
-        fontSize: 12,
-        fontWeight: "700",
-        lineHeight: 18,
-    },
-
-    buttonWrapper: {
-        marginTop: 4,
-    },
-
-    /* =================================================
-       FOOTER
-    ================================================= */
-
-    footer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 6,
-        marginTop: 26,
-    },
-
-    footerText: {
-        color: colors.muted,
-        fontSize: 13,
-    },
-
-    link: {
-        color: colors.goldLight,
-        fontSize: 13,
-        fontWeight: "900",
-    },
-
-    secureFooter: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        marginTop: 16,
-    },
-
-    secureFooterText: {
-        color: colors.mutedDark,
-        fontSize: 10,
-    },
-});

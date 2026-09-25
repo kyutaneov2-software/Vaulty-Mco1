@@ -1,52 +1,80 @@
-/**
- * Smart Rental Vault (SRV)
- * Luxury design system
- * Purple + Black + Gold
- */
-
 export const colors = {
-    // Main surfaces
-    background: "#09070D",
-    surface: "#15111F",
-    surfaceElevated: "#1C1628",
-    surfaceSoft: "#211A2E",
+    /* =================================================
+       CORE BACKGROUND
+    ================================================= */
 
-    // Brand
+    background: "#050407",
+
+    surface: "#0B090F",
+    surfaceElevated: "#111019",
+    surfaceSoft: "#171320",
+
+    /* =================================================
+       PURPLE SYSTEM
+    ================================================= */
+
     primary: "#8B5CF6",
-    primaryDark: "#6D28D9",
-    primarySoft: "#24173D",
+    primaryLight: "#A78BFA",
+    primaryBright: "#B06CFF",
+    primaryDark: "#5B21B6",
 
-    // Luxury / premium accent
-    gold: "#D4AF37",
-    goldLight: "#F1D77A",
-    goldSoft: "#2D2510",
+    primarySoft: "#21133A",
+    primaryFaint: "#160D25",
 
-    // Text
-    text: "#F8F4FF",
+    /* =================================================
+       GRADIENT COLORS
+    ================================================= */
+
+    gradientTop: "#5E20D8",
+    gradientTopSoft: "#4315A8",
+    gradientMid: "#24103F",
+    gradientBottom: "#08060B",
+
+    /* =================================================
+       TEXT
+    ================================================= */
+
+    text: "#F4F1F8",
     textStrong: "#FFFFFF",
-    muted: "#A9A0B8",
-    mutedDark: "#7F758F",
 
-    // Borders
-    border: "#30263D",
-    borderStrong: "#4A3A5E",
+    muted: "#A59EAF",
+    mutedDark: "#706978",
 
-    // Status
-    success: "#55D98A",
-    successSoft: "#12301F",
+    /* =================================================
+       BORDERS
+    ================================================= */
 
-    warning: "#F5C451",
-    warningSoft: "#352A0E",
+    border: "#24202B",
+    borderStrong: "#3A2B4E",
+    borderPurple: "#4B2A72",
 
-    danger: "#FB7185",
-    dangerSoft: "#34151D",
+    /* =================================================
+       STATUS
+    ================================================= */
 
-    // Compatibility with the original SRV foundation
-    softBlue: "#24173D",
-    softGreen: "#12301F",
-    softYellow: "#352A0E",
+    success: "#5EE39A",
+    successSoft: "#10291C",
 
-    // Utility
+    warning: "#F4C95D",
+    warningSoft: "#30260F",
+
+    danger: "#FF6B81",
+    dangerSoft: "#32131B",
+
+    /* =================================================
+       GOLD
+       
+       Used sparingly for premium/value accents.
+    ================================================= */
+
+    gold: "#D4AF37",
+    goldLight: "#F0D875",
+    goldSoft: "#2C240E",
+
+    /* =================================================
+       COMMON
+    ================================================= */
+
     black: "#000000",
     white: "#FFFFFF",
     transparent: "transparent",
@@ -64,17 +92,47 @@ export const radius = {
     sm: 10,
     md: 16,
     lg: 22,
+    xl: 28,
     pill: 999,
 };
 
 export const gradients = {
-    background: ["#05040A", "#0B0712", "#160D25", "#09060F"] as const,
+    /* =================================================
+       MAIN APP BACKGROUND
+       
+       Purple begins at the top and fades into black
+       toward the bottom.
+    ================================================= */
+
+    background: [
+        "#5E20D8",
+        "#4315A8",
+        "#24103F",
+        "#100A18",
+        "#050407",
+    ] as const,
+
+    /* =================================================
+       PRIMARY ACTION
+    ================================================= */
 
     primary: ["#6D28D9", "#8B5CF6"] as const,
 
+    /* =================================================
+       PURPLE GLOW
+    ================================================= */
+
+    purpleGlow: ["#8B5CF6", "#4C1D95", "#050407"] as const,
+
+    /* =================================================
+       PREMIUM ACCENT
+    ================================================= */
+
     luxury: ["#8B5CF6", "#D4AF37"] as const,
 
-    gold: ["#B8860B", "#F1D77A", "#D4AF37"] as const,
+    /* =================================================
+       CARD
+    ================================================= */
 
-    card: ["#211A2E", "#15111F"] as const,
+    card: ["#111019", "#09070D"] as const,
 };

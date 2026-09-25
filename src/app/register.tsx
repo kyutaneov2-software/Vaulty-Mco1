@@ -2,11 +2,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
@@ -17,41 +15,59 @@ import { AppInput } from "../components/AppInput";
 import { FormCheckbox } from "../components/FormCheckbox";
 import { PasswordInput } from "../components/PasswordInput";
 import SRVBackground from "../components/SRVBackground";
-import { colors, radius, spacing } from "../constants/theme";
+import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
+import { authStyles as styles } from "../styles/auth.styles";
 
+/* =========================================================
+   FUNCTION: getRegisterErrorMessage
+
+   Converts registration errors into user-friendly messages.
+========================================================= */
 const getRegisterErrorMessage = (error: unknown) => {
     const message =
         error instanceof Error ? error.message : String(error ?? "");
 
     const normalized = message.toLowerCase();
 
-    if (normalized.includes("user already registered")) {
+    if (
+        normalized.includes("user already registered") ||
+        normalized.includes("email already registered")
+    ) {
         return "An account with this email already exists. Please log in instead.";
     }
 
-    if (normalized.includes("email already registered")) {
-        return "An account with this email already exists. Please log in instead.";
-    }
-
-    if (normalized.includes("password")) {
-        return message;
+    if (
+        normalized.includes("rate limit") ||
+        normalized.includes("too many requests")
+    ) {
+        return "Too many registration attempts. Please wait a moment before trying again.";
     }
 
     return message || "Unable to create your account. Please try again.";
 };
 
+/* =========================================================
+   FUNCTION: RegisterScreen
+
+   Renders the Vaulty account registration screen and
+   starts the TOTP security setup after registration.
+========================================================= */
 export default function RegisterScreen() {
     const { signUp } = useAuth();
 
     const [name, setName] = useState("");
+
     const [email, setEmail] = useState("");
+
     const [password, setPassword] = useState("");
+
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [rememberMe, setRememberMe] = useState(true);
 
     const [loading, setLoading] = useState(false);
+
     const [error, setError] = useState("");
 
     const passwordRules = useMemo(
@@ -93,6 +109,70 @@ export default function RegisterScreen() {
     const passwordsMatch =
         confirmPassword.length > 0 && password === confirmPassword;
 
+    /* =========================================================
+       FUNCTION: handleNameChange
+
+       Updates the full name field and clears the error.
+    ========================================================= */
+    const handleNameChange = (value: string) => {
+        setName(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handleEmailChange
+
+       Updates the email field and clears the error.
+    ========================================================= */
+    const handleEmailChange = (value: string) => {
+        setEmail(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handlePasswordChange
+
+       Updates the password field and clears the error.
+    ========================================================= */
+    const handlePasswordChange = (value: string) => {
+        setPassword(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handleConfirmPasswordChange
+
+       Updates the confirmation field and clears the error.
+    ========================================================= */
+    const handleConfirmPasswordChange = (value: string) => {
+        setConfirmPassword(value);
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handleRememberMeToggle
+
+       Toggles persistent session behavior.
+    ========================================================= */
+    const handleRememberMeToggle = () => {
+        setRememberMe((value) => !value);
+    };
+
+    /* =========================================================
+       FUNCTION: handleLoginNavigation
+
+       Navigates the user back to the login screen.
+    ========================================================= */
+    const handleLoginNavigation = () => {
+        router.replace("/login");
+    };
+
+    /* =========================================================
+       FUNCTION: handleRegister
+
+       Validates registration data, creates the account,
+       and routes the new user into TOTP setup.
+    ========================================================= */
     const handleRegister = async () => {
         setError("");
 
@@ -121,10 +201,6 @@ export default function RegisterScreen() {
 
             const cleanEmail = email.trim().toLowerCase();
 
-            /**
-             * Supabase should create the user and immediately
-             * return a session because Confirm Email is disabled.
-             */
             const nextStage = await signUp(
                 name,
                 cleanEmail,
@@ -132,24 +208,25 @@ export default function RegisterScreen() {
                 rememberMe,
             );
 
-            /**
-             * New users need to enroll their authenticator.
+            /*
+             * New account needs TOTP setup.
              */
             if (nextStage === "setup") {
                 router.replace("/setup-mfa");
                 return;
             }
 
-            /**
-             * This is mainly a safety fallback.
+            /*
+             * Safety fallback if an existing factor
+             * is found for the account.
              */
             if (nextStage === "challenge") {
                 router.replace("/mfa-challenge");
                 return;
             }
 
-            /**
-             * A ready session can go straight to the app.
+            /*
+             * Already fully authenticated.
              */
             if (nextStage === "ready") {
                 router.replace("/(app)");
@@ -168,68 +245,32 @@ export default function RegisterScreen() {
 
     return (
         <SRVBackground>
-            {/* Decorative ambient glow */}
-            <View
-                pointerEvents="none"
-                style={[styles.glow, styles.glowPurple]}
-            />
-
-            <View pointerEvents="none" style={[styles.glow, styles.glowGold]} />
-
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={styles.registerContent}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
                     {/* =================================================
-                        LOGO HERO
-                    ================================================= */}
-                    <View style={styles.hero}>
-                        <LinearGradient
-                            colors={[
-                                "rgba(139,92,246,0.22)",
-                                "rgba(212,175,55,0.10)",
-                                "rgba(21,17,31,0.96)",
-                            ]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.logoShell}
-                        >
-                            <View style={styles.logoInner}>
-                                <Image
-                                    source={require("../../assets/images/srv-logo.png")}
-                                    style={styles.logo}
-                                    resizeMode="contain"
-                                />
-                            </View>
-
-                            <View style={styles.logoAccent}>
-                                <View style={styles.accentDot} />
-
-                                <Text style={styles.accentText}>
-                                    SECURE STORAGE
-                                </Text>
-                            </View>
-                        </LinearGradient>
-                    </View>
-
-                    {/* =================================================
                         PAGE HEADING
                     ================================================= */}
-                    <View style={styles.heading}>
-                        <Text style={styles.eyebrow}>SMART RENTAL VAULT</Text>
+                    <View style={styles.registerHeading}>
+                        <Text style={styles.registerEyebrow}>
+                            SMART RENTAL VAULT
+                        </Text>
 
-                        <Text style={styles.title}>
+                        <Text style={styles.registerTitle}>
                             Create your{" "}
-                            <Text style={styles.titleAccent}>Vaulty</Text>{" "}
+                            <Text style={styles.registerTitleAccent}>
+                                Vaulty
+                            </Text>{" "}
                             account.
                         </Text>
 
-                        <Text style={styles.subtitle}>
+                        <Text style={styles.registerSubtitle}>
                             Your secure storage journey starts here. Create your
                             account and protect it with authenticator-based
                             verification.
@@ -237,52 +278,51 @@ export default function RegisterScreen() {
                     </View>
 
                     {/* =================================================
-                        MAIN FORM CARD
+                        REGISTRATION CARD
                     ================================================= */}
                     <LinearGradient
-                        colors={[
-                            "rgba(255,255,255,0.055)",
-                            "rgba(139,92,246,0.045)",
-                            "rgba(9,7,13,0.92)",
-                        ]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.formCard}
+                        colors={["#100C16", "#09070D", "#050407"]}
+                        start={{
+                            x: 0,
+                            y: 0,
+                        }}
+                        end={{
+                            x: 0.8,
+                            y: 1,
+                        }}
+                        style={styles.registerFormCard}
                     >
-                        <View style={styles.cardHighlight} />
+                        <View style={styles.registerCardHighlight} />
 
                         {/* =================================================
                             PERSONAL DETAILS
                         ================================================= */}
-                        <View style={styles.sectionHeader}>
-                            <View style={styles.sectionIcon}>
+                        <View style={styles.registerSectionHeader}>
+                            <View style={styles.registerSectionIcon}>
                                 <Ionicons
                                     name="person-outline"
                                     size={16}
-                                    color={colors.goldLight}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
                             <View>
-                                <Text style={styles.sectionTitle}>
+                                <Text style={styles.registerSectionTitle}>
                                     Personal details
                                 </Text>
 
-                                <Text style={styles.sectionSubtitle}>
+                                <Text style={styles.registerSectionSubtitle}>
                                     Tell us a little about you
                                 </Text>
                             </View>
                         </View>
 
-                        <View style={styles.form}>
+                        <View style={styles.registerForm}>
                             {/* FULL NAME */}
                             <AppInput
                                 label="Full name"
                                 value={name}
-                                onChangeText={(value) => {
-                                    setName(value);
-                                    setError("");
-                                }}
+                                onChangeText={handleNameChange}
                                 autoCapitalize="words"
                                 autoCorrect={false}
                                 placeholder="Your full name"
@@ -292,10 +332,7 @@ export default function RegisterScreen() {
                             <AppInput
                                 label="Email"
                                 value={email}
-                                onChangeText={(value) => {
-                                    setEmail(value);
-                                    setError("");
-                                }}
+                                onChangeText={handleEmailChange}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoCorrect={false}
@@ -322,59 +359,57 @@ export default function RegisterScreen() {
                             />
                         </View>
 
-                        {/* Divider */}
-                        <View style={styles.divider} />
+                        <View style={styles.registerDivider} />
 
                         {/* =================================================
-                            SECURITY
+                            ACCOUNT SECURITY
                         ================================================= */}
-                        <View style={styles.sectionHeader}>
-                            <View style={styles.sectionIcon}>
+                        <View style={styles.registerSectionHeader}>
+                            <View style={styles.registerSectionIcon}>
                                 <Ionicons
                                     name="shield-checkmark-outline"
                                     size={16}
-                                    color={colors.goldLight}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
                             <View>
-                                <Text style={styles.sectionTitle}>
+                                <Text style={styles.registerSectionTitle}>
                                     Account security
                                 </Text>
 
-                                <Text style={styles.sectionSubtitle}>
+                                <Text style={styles.registerSectionSubtitle}>
                                     Protect your Vaulty account
                                 </Text>
                             </View>
                         </View>
 
-                        <View style={styles.form}>
+                        <View style={styles.registerForm}>
                             {/* PASSWORD */}
                             <PasswordInput
                                 label="Password"
                                 value={password}
-                                onChangeText={(value) => {
-                                    setPassword(value);
-                                    setError("");
-                                }}
+                                onChangeText={handlePasswordChange}
                                 autoComplete="new-password"
                                 placeholder="Create a password"
                             />
 
                             {/* PASSWORD STRENGTH */}
                             {password.length > 0 ? (
-                                <View style={styles.passwordPanel}>
-                                    <View style={styles.strengthHeader}>
+                                <View style={styles.registerPasswordPanel}>
+                                    <View style={styles.registerStrengthHeader}>
                                         <View>
                                             <Text
-                                                style={styles.requirementsTitle}
+                                                style={
+                                                    styles.registerRequirementsTitle
+                                                }
                                             >
                                                 Password strength
                                             </Text>
 
                                             <Text
                                                 style={
-                                                    styles.requirementsSubtitle
+                                                    styles.registerRequirementsSubtitle
                                                 }
                                             >
                                                 Make your password stronger
@@ -383,7 +418,7 @@ export default function RegisterScreen() {
 
                                         <View
                                             style={[
-                                                styles.strengthBadge,
+                                                styles.registerStrengthBadge,
                                                 {
                                                     borderColor:
                                                         passwordStrengthColor,
@@ -392,7 +427,7 @@ export default function RegisterScreen() {
                                         >
                                             <Text
                                                 style={[
-                                                    styles.strength,
+                                                    styles.registerStrength,
                                                     {
                                                         color: passwordStrengthColor,
                                                     },
@@ -403,12 +438,12 @@ export default function RegisterScreen() {
                                         </View>
                                     </View>
 
-                                    <View style={styles.strengthBars}>
+                                    <View style={styles.registerStrengthBars}>
                                         {[1, 2, 3, 4].map((index) => (
                                             <View
                                                 key={index}
                                                 style={[
-                                                    styles.strengthBar,
+                                                    styles.registerStrengthBar,
                                                     index <= passwordScore && {
                                                         backgroundColor:
                                                             passwordStrengthColor,
@@ -418,11 +453,11 @@ export default function RegisterScreen() {
                                         ))}
                                     </View>
 
-                                    <View style={styles.requirements}>
+                                    <View style={styles.registerRequirements}>
                                         {passwordRules.map((rule) => (
                                             <View
                                                 key={rule.label}
-                                                style={styles.rule}
+                                                style={styles.registerRule}
                                             >
                                                 <Ionicons
                                                     name={
@@ -440,9 +475,9 @@ export default function RegisterScreen() {
 
                                                 <Text
                                                     style={[
-                                                        styles.ruleText,
+                                                        styles.registerRuleText,
                                                         rule.valid &&
-                                                            styles.ruleTextValid,
+                                                            styles.registerRuleTextValid,
                                                     ]}
                                                 >
                                                     {rule.label}
@@ -457,19 +492,16 @@ export default function RegisterScreen() {
                             <PasswordInput
                                 label="Confirm password"
                                 value={confirmPassword}
-                                onChangeText={(value) => {
-                                    setConfirmPassword(value);
-                                    setError("");
-                                }}
+                                onChangeText={handleConfirmPasswordChange}
                                 autoComplete="new-password"
                                 placeholder="Re-enter your password"
                             />
 
-                            {/* MATCH INDICATOR */}
+                            {/* PASSWORD MATCH */}
                             {confirmPassword.length > 0 ? (
                                 <View
                                     style={[
-                                        styles.matchBox,
+                                        styles.registerMatchBox,
                                         {
                                             borderColor: passwordsMatch
                                                 ? colors.success
@@ -480,7 +512,7 @@ export default function RegisterScreen() {
                                         },
                                     ]}
                                 >
-                                    <View style={styles.matchIcon}>
+                                    <View style={styles.registerMatchIcon}>
                                         <Ionicons
                                             name={
                                                 passwordsMatch
@@ -498,7 +530,7 @@ export default function RegisterScreen() {
 
                                     <Text
                                         style={[
-                                            styles.matchText,
+                                            styles.registerMatchText,
                                             {
                                                 color: passwordsMatch
                                                     ? colors.success
@@ -517,21 +549,21 @@ export default function RegisterScreen() {
                         {/* =================================================
                             SESSION PREFERENCE
                         ================================================= */}
-                        <View style={styles.preferenceCard}>
-                            <View style={styles.preferenceIcon}>
+                        <View style={styles.registerPreferenceCard}>
+                            <View style={styles.registerPreferenceIcon}>
                                 <Ionicons
                                     name="phone-portrait-outline"
                                     size={18}
-                                    color={colors.primary}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
-                            <View style={styles.preferenceContent}>
-                                <Text style={styles.preferenceTitle}>
+                            <View style={styles.registerPreferenceContent}>
+                                <Text style={styles.registerPreferenceTitle}>
                                     Stay signed in
                                 </Text>
 
-                                <Text style={styles.preferenceSubtitle}>
+                                <Text style={styles.registerPreferenceSubtitle}>
                                     Keep your Vaulty session active on this
                                     device.
                                 </Text>
@@ -539,29 +571,29 @@ export default function RegisterScreen() {
 
                             <FormCheckbox
                                 checked={rememberMe}
-                                onPress={() => setRememberMe((value) => !value)}
+                                onPress={handleRememberMeToggle}
                                 label=""
                             />
                         </View>
 
                         {/* =================================================
-                            MFA INFO
+                            MFA INFORMATION
                         ================================================= */}
-                        <View style={styles.mfaInfoCard}>
-                            <View style={styles.mfaInfoIcon}>
+                        <View style={styles.registerMfaCard}>
+                            <View style={styles.registerMfaIcon}>
                                 <Ionicons
                                     name="shield-checkmark"
                                     size={18}
-                                    color={colors.goldLight}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
-                            <View style={styles.mfaInfoContent}>
-                                <Text style={styles.mfaInfoTitle}>
+                            <View style={styles.registerMfaContent}>
+                                <Text style={styles.registerMfaTitle}>
                                     Authenticator protection
                                 </Text>
 
-                                <Text style={styles.mfaInfoText}>
+                                <Text style={styles.registerMfaText}>
                                     After registration, you'll connect an
                                     authenticator app and verify a rotating
                                     6-digit security code.
@@ -569,10 +601,12 @@ export default function RegisterScreen() {
                             </View>
                         </View>
 
-                        {/* ERROR */}
+                        {/* =================================================
+                            ERROR
+                        ================================================= */}
                         {error ? (
-                            <View style={styles.errorBox}>
-                                <View style={styles.errorIcon}>
+                            <View style={styles.registerErrorBox}>
+                                <View style={styles.registerErrorIcon}>
                                     <Ionicons
                                         name="alert-circle"
                                         size={16}
@@ -580,12 +614,16 @@ export default function RegisterScreen() {
                                     />
                                 </View>
 
-                                <Text style={styles.errorText}>{error}</Text>
+                                <Text style={styles.registerErrorText}>
+                                    {error}
+                                </Text>
                             </View>
                         ) : null}
 
-                        {/* CREATE ACCOUNT */}
-                        <View style={styles.buttonWrapper}>
+                        {/* =================================================
+                            CREATE ACCOUNT
+                        ================================================= */}
+                        <View style={styles.registerButtonWrapper}>
                             <AppButton
                                 title="Create account"
                                 onPress={handleRegister}
@@ -593,15 +631,17 @@ export default function RegisterScreen() {
                             />
                         </View>
 
-                        {/* Security note */}
-                        <View style={styles.verificationNote}>
+                        {/* =================================================
+                            SECURITY NOTE
+                        ================================================= */}
+                        <View style={styles.registerSecurityNote}>
                             <Ionicons
                                 name="lock-closed-outline"
                                 size={17}
-                                color={colors.goldLight}
+                                color={colors.primaryLight}
                             />
 
-                            <Text style={styles.verificationText}>
+                            <Text style={styles.registerSecurityText}>
                                 Vaulty requires authenticator verification
                                 before account access is completed.
                             </Text>
@@ -611,28 +651,30 @@ export default function RegisterScreen() {
                     {/* =================================================
                         LOGIN FOOTER
                     ================================================= */}
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>
+                    <View style={styles.registerFooter}>
+                        <Text style={styles.registerFooterText}>
                             Already have an account?
                         </Text>
 
                         <Text
-                            style={styles.link}
-                            onPress={() => router.replace("/login")}
+                            style={styles.registerLink}
+                            onPress={handleLoginNavigation}
                         >
                             Log in
                         </Text>
                     </View>
 
-                    {/* Security footer */}
-                    <View style={styles.secureFooter}>
+                    {/* =================================================
+                        SECURITY FOOTER
+                    ================================================= */}
+                    <View style={styles.registerSecureFooter}>
                         <Ionicons
                             name="lock-closed-outline"
                             size={13}
                             color={colors.mutedDark}
                         />
 
-                        <Text style={styles.secureFooterText}>
+                        <Text style={styles.registerSecureFooterText}>
                             Your account information is securely protected.
                         </Text>
                     </View>
@@ -641,503 +683,3 @@ export default function RegisterScreen() {
         </SRVBackground>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    content: {
-        flexGrow: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: 34,
-        paddingBottom: 44,
-    },
-
-    /* =================================================
-       AMBIENT BACKGROUND
-    ================================================= */
-
-    glow: {
-        position: "absolute",
-        borderRadius: 999,
-    },
-
-    glowPurple: {
-        width: 240,
-        height: 240,
-        top: -90,
-        right: -80,
-        backgroundColor: colors.primary,
-        opacity: 0.1,
-    },
-
-    glowGold: {
-        width: 180,
-        height: 180,
-        bottom: 40,
-        left: -90,
-        backgroundColor: colors.gold,
-        opacity: 0.06,
-    },
-
-    /* =================================================
-       HERO / LOGO
-    ================================================= */
-
-    hero: {
-        alignItems: "center",
-        marginBottom: 24,
-    },
-
-    logoShell: {
-        width: 190,
-        minHeight: 118,
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        padding: 10,
-        shadowColor: colors.primary,
-        shadowOffset: {
-            width: 0,
-            height: 12,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 22,
-        elevation: 10,
-    },
-
-    logoInner: {
-        flex: 1,
-        minHeight: 76,
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 20,
-        backgroundColor: "rgba(9,7,13,0.72)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.06)",
-    },
-
-    logo: {
-        width: 145,
-        height: 70,
-    },
-
-    logoAccent: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 7,
-        marginTop: 8,
-    },
-
-    accentDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 999,
-        backgroundColor: colors.gold,
-    },
-
-    accentText: {
-        color: colors.muted,
-        fontSize: 9,
-        fontWeight: "900",
-        letterSpacing: 1.8,
-    },
-
-    /* =================================================
-       HEADING
-    ================================================= */
-
-    heading: {
-        marginBottom: 22,
-    },
-
-    eyebrow: {
-        color: colors.gold,
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 2.4,
-        marginBottom: 8,
-    },
-
-    title: {
-        color: colors.textStrong,
-        fontSize: 31,
-        lineHeight: 39,
-        fontWeight: "900",
-    },
-
-    titleAccent: {
-        color: colors.goldLight,
-    },
-
-    subtitle: {
-        color: colors.muted,
-        fontSize: 14,
-        lineHeight: 22,
-        marginTop: 8,
-        maxWidth: 370,
-    },
-
-    /* =================================================
-       MAIN CARD
-    ================================================= */
-
-    formCard: {
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 28,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.35,
-        shadowRadius: 28,
-        elevation: 12,
-    },
-
-    cardHighlight: {
-        position: "absolute",
-        top: 0,
-        left: 26,
-        right: 26,
-        height: 1,
-        backgroundColor: "rgba(241,215,122,0.32)",
-    },
-
-    /* =================================================
-       SECTION HEADERS
-    ================================================= */
-
-    sectionHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 11,
-        marginBottom: 16,
-    },
-
-    sectionIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.goldSoft,
-        borderWidth: 1,
-        borderColor: "rgba(212,175,55,0.30)",
-    },
-
-    sectionTitle: {
-        color: colors.textStrong,
-        fontSize: 14,
-        fontWeight: "800",
-    },
-
-    sectionSubtitle: {
-        color: colors.mutedDark,
-        fontSize: 11,
-        marginTop: 2,
-    },
-
-    form: {
-        gap: spacing.md,
-    },
-
-    inputIndicator: {
-        marginRight: 14,
-    },
-
-    divider: {
-        height: 1,
-        backgroundColor: colors.border,
-        marginVertical: 22,
-    },
-
-    /* =================================================
-       PASSWORD
-    ================================================= */
-
-    passwordPanel: {
-        backgroundColor: "rgba(33,26,46,0.72)",
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: 19,
-        padding: spacing.md,
-        gap: spacing.sm,
-    },
-
-    strengthHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-
-    requirementsTitle: {
-        color: colors.text,
-        fontSize: 13,
-        fontWeight: "800",
-    },
-
-    requirementsSubtitle: {
-        color: colors.mutedDark,
-        fontSize: 10,
-        marginTop: 2,
-    },
-
-    strengthBadge: {
-        minWidth: 58,
-        paddingHorizontal: 9,
-        paddingVertical: 5,
-        borderRadius: 999,
-        borderWidth: 1,
-        alignItems: "center",
-    },
-
-    strength: {
-        fontSize: 11,
-        fontWeight: "900",
-    },
-
-    strengthBars: {
-        flexDirection: "row",
-        gap: 5,
-        marginTop: 4,
-    },
-
-    strengthBar: {
-        flex: 1,
-        height: 5,
-        borderRadius: 999,
-        backgroundColor: colors.border,
-    },
-
-    requirements: {
-        gap: 6,
-        marginTop: 3,
-    },
-
-    rule: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 7,
-    },
-
-    ruleText: {
-        color: colors.muted,
-        fontSize: 12,
-    },
-
-    ruleTextValid: {
-        color: colors.success,
-    },
-
-    /* =================================================
-       PASSWORD MATCH
-    ================================================= */
-
-    matchBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 9,
-        borderWidth: 1,
-        borderRadius: 15,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-    },
-
-    matchIcon: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(255,255,255,0.05)",
-    },
-
-    matchText: {
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    /* =================================================
-       SESSION
-    ================================================= */
-
-    preferenceCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginTop: 20,
-        padding: 12,
-        borderRadius: 18,
-        backgroundColor: "rgba(36,23,61,0.58)",
-        borderWidth: 1,
-        borderColor: "rgba(139,92,246,0.22)",
-    },
-
-    preferenceIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.primarySoft,
-        marginRight: 10,
-    },
-
-    preferenceContent: {
-        flex: 1,
-    },
-
-    preferenceTitle: {
-        color: colors.text,
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    preferenceSubtitle: {
-        color: colors.mutedDark,
-        fontSize: 10,
-        lineHeight: 15,
-        marginTop: 2,
-        paddingRight: 8,
-    },
-
-    /* =================================================
-       MFA INFO
-    ================================================= */
-
-    mfaInfoCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginTop: 14,
-        padding: 12,
-        borderRadius: 18,
-        backgroundColor: "rgba(45,37,16,0.48)",
-        borderWidth: 1,
-        borderColor: "rgba(212,175,55,0.20)",
-    },
-
-    mfaInfoIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.goldSoft,
-        marginRight: 10,
-    },
-
-    mfaInfoContent: {
-        flex: 1,
-    },
-
-    mfaInfoTitle: {
-        color: colors.goldLight,
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    mfaInfoText: {
-        color: colors.mutedDark,
-        fontSize: 10,
-        lineHeight: 15,
-        marginTop: 2,
-    },
-
-    /* =================================================
-       ERROR
-    ================================================= */
-
-    errorBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 9,
-        marginTop: 16,
-        padding: 12,
-        borderRadius: 17,
-        backgroundColor: colors.dangerSoft,
-        borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.55)",
-    },
-
-    errorIcon: {
-        width: 28,
-        height: 28,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(251,113,133,0.10)",
-    },
-
-    errorText: {
-        flex: 1,
-        color: colors.danger,
-        fontSize: 12,
-        fontWeight: "700",
-        lineHeight: 18,
-    },
-
-    /* =================================================
-       BUTTON / NOTE
-    ================================================= */
-
-    buttonWrapper: {
-        marginTop: 20,
-    },
-
-    verificationNote: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginTop: 14,
-        paddingHorizontal: 6,
-    },
-
-    verificationText: {
-        flex: 1,
-        color: colors.mutedDark,
-        fontSize: 10,
-        lineHeight: 15,
-    },
-
-    /* =================================================
-       FOOTER
-    ================================================= */
-
-    footer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 6,
-        marginTop: 26,
-    },
-
-    footerText: {
-        color: colors.muted,
-        fontSize: 13,
-    },
-
-    link: {
-        color: colors.goldLight,
-        fontSize: 13,
-        fontWeight: "900",
-    },
-
-    secureFooter: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        marginTop: 16,
-    },
-
-    secureFooterText: {
-        color: colors.mutedDark,
-        fontSize: 10,
-    },
-});

@@ -6,35 +6,54 @@ import {
     KeyboardAvoidingView,
     Platform,
     Pressable,
-    StyleSheet,
     Text,
     TextInput,
     View,
 } from "react-native";
 
-import SRVBackground from "../components/SRVBackground";
 import { AppButton } from "../components/AppButton";
-import { colors, radius, spacing } from "../constants/theme";
+import SRVBackground from "../components/SRVBackground";
+import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
+import { authStyles as styles } from "../styles/auth.styles";
 
+/* =========================================================
+   FUNCTION: MFAChallengeScreen
+
+   Renders the Vaulty MFA verification screen for users
+   who already have a verified TOTP authenticator.
+========================================================= */
 export default function MFAChallengeScreen() {
     const { refreshAuthState, signOut } = useAuth();
 
     const [factorId, setFactorId] = useState("");
+
     const [code, setCode] = useState("");
 
     const [loading, setLoading] = useState(true);
+
     const [verifying, setVerifying] = useState(false);
+
     const [error, setError] = useState("");
 
+    /* =========================================================
+       FUNCTION: loadFactor
+
+       Retrieves the user's verified TOTP factor from
+       Supabase Auth.
+    ========================================================= */
     useEffect(() => {
         const loadFactor = async () => {
             try {
-                const { data, error } = await supabase.auth.mfa.listFactors();
+                setLoading(true);
+                setError("");
 
-                if (error) {
-                    throw error;
+                const { data, error: listError } =
+                    await supabase.auth.mfa.listFactors();
+
+                if (listError) {
+                    throw listError;
                 }
 
                 const factor = data.totp?.find(
@@ -42,8 +61,16 @@ export default function MFAChallengeScreen() {
                 );
 
                 if (!factor) {
-                    throw new Error("No verified authenticator was found.");
+                    console.warn(
+                        "No verified TOTP factor was found. Returning to setup.",
+                    );
+
+                    router.replace("/setup-mfa");
+
+                    return;
                 }
+
+                console.log("Vaulty MFA factor loaded:", factor.id);
 
                 setFactorId(factor.id);
             } catch (error) {
@@ -62,27 +89,47 @@ export default function MFAChallengeScreen() {
         loadFactor();
     }, []);
 
+    /* =========================================================
+       FUNCTION: handleCodeChange
+
+       Accepts numeric MFA input and limits the value
+       to exactly six characters.
+    ========================================================= */
+    const handleCodeChange = (value: string) => {
+        setCode(value.replace(/\D/g, "").slice(0, 6));
+
+        setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: handleVerify
+
+       Verifies the user's current TOTP code and upgrades
+       the Supabase session to AAL2.
+    ========================================================= */
     const handleVerify = async () => {
-        const cleanCode = code.replace(/\D/g, "");
+        const cleanCode = code.replace(/\D/g, "").slice(0, 6);
 
         setError("");
 
         if (!factorId) {
             setError("Your authenticator is not ready.");
+
             return;
         }
 
         if (!/^\d{6}$/.test(cleanCode)) {
             setError("Enter the 6-digit code from your authenticator app.");
+
             return;
         }
 
         try {
             setVerifying(true);
 
-            /**
-             * Supabase creates the challenge and verifies
-             * the authenticator code.
+            /*
+             * Supabase creates the MFA challenge and
+             * verifies the TOTP code.
              */
             const { error: verifyError } =
                 await supabase.auth.mfa.challengeAndVerify({
@@ -94,10 +141,15 @@ export default function MFAChallengeScreen() {
                 throw verifyError;
             }
 
+            /*
+             * Refresh the application authentication
+             * state after successful MFA verification.
+             */
             const stage = await refreshAuthState();
 
             if (stage === "ready") {
                 router.replace("/(app)");
+
                 return;
             }
 
@@ -112,9 +164,18 @@ export default function MFAChallengeScreen() {
                     ? error.message
                     : "Unable to verify your code.";
 
-            if (message.toLowerCase().includes("expired")) {
+            const normalized = message.toLowerCase();
+
+            if (normalized.includes("expired")) {
                 setError(
                     "That verification attempt expired. Enter the current code and try again.",
+                );
+            } else if (
+                normalized.includes("invalid") ||
+                normalized.includes("incorrect")
+            ) {
+                setError(
+                    "The verification code is incorrect. Check your authenticator and try again.",
                 );
             } else {
                 setError(message);
@@ -124,6 +185,12 @@ export default function MFAChallengeScreen() {
         }
     };
 
+    /* =========================================================
+       FUNCTION: handleSignOut
+
+       Signs the current user out locally and returns them
+       to the unauthenticated authentication flow.
+    ========================================================= */
     const handleSignOut = async () => {
         try {
             await signOut();
@@ -138,19 +205,24 @@ export default function MFAChallengeScreen() {
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
-                <View style={styles.content}>
-                    <View style={styles.topBar}>
+                <View style={styles.mfaContent}>
+                    {/* =================================================
+                        TOP BAR
+                    ================================================= */}
+                    <View style={styles.mfaTopBar}>
                         <View>
-                            <Text style={styles.eyebrow}>VAULTY SECURITY</Text>
+                            <Text style={styles.mfaEyebrow}>
+                                VAULTY SECURITY
+                            </Text>
 
-                            <Text style={styles.topTitle}>
+                            <Text style={styles.mfaTopTitle}>
                                 Verify your identity
                             </Text>
                         </View>
 
                         <Pressable
                             onPress={handleSignOut}
-                            style={styles.signOutButton}
+                            style={styles.mfaSignOutButton}
                         >
                             <Ionicons
                                 name="log-out-outline"
@@ -160,70 +232,100 @@ export default function MFAChallengeScreen() {
                         </Pressable>
                     </View>
 
-                    <View style={styles.centerContent}>
-                        <View style={styles.iconBox}>
+                    {/* =================================================
+                        VERIFICATION CONTENT
+                    ================================================= */}
+                    <View style={styles.mfaCenterContent}>
+                        <View style={styles.mfaIconBox}>
                             <Ionicons
                                 name="shield-checkmark"
-                                size={34}
-                                color={colors.goldLight}
+                                size={32}
+                                color={colors.primaryLight}
                             />
                         </View>
 
-                        <Text style={styles.title}>
+                        <Text style={styles.mfaTitle}>
                             Enter your verification code
                         </Text>
 
-                        <Text style={styles.subtitle}>
+                        <Text style={styles.mfaSubtitle}>
                             Open your authenticator app and enter the current
                             6-digit Vaulty code.
                         </Text>
 
-                        <View style={styles.card}>
-                            <Text style={styles.label}>AUTHENTICATOR CODE</Text>
+                        {/* =================================================
+                            VERIFICATION CARD
+                        ================================================= */}
+                        <View style={styles.mfaCard}>
+                            <View style={styles.mfaCardHeader}>
+                                <View style={styles.mfaCardIcon}>
+                                    <Ionicons
+                                        name="key-outline"
+                                        size={17}
+                                        color={colors.primaryLight}
+                                    />
+                                </View>
+
+                                <View>
+                                    <Text style={styles.mfaCardTitle}>
+                                        Authenticator code
+                                    </Text>
+
+                                    <Text style={styles.mfaCardSubtitle}>
+                                        Enter the 6-digit code
+                                    </Text>
+                                </View>
+                            </View>
 
                             {loading ? (
-                                <View style={styles.loadingBox}>
+                                <View style={styles.mfaLoadingBox}>
                                     <ActivityIndicator
                                         size="large"
                                         color={colors.primary}
                                     />
+
+                                    <Text style={styles.mfaLoadingText}>
+                                        Loading authenticator...
+                                    </Text>
                                 </View>
                             ) : (
                                 <TextInput
                                     value={code}
-                                    onChangeText={(value) => {
-                                        setCode(
-                                            value
-                                                .replace(/\D/g, "")
-                                                .slice(0, 6),
-                                        );
-                                        setError("");
-                                    }}
+                                    onChangeText={handleCodeChange}
                                     placeholder="000000"
                                     placeholderTextColor={colors.mutedDark}
                                     keyboardType="number-pad"
                                     maxLength={6}
                                     textAlign="center"
                                     autoFocus
-                                    style={styles.codeInput}
+                                    editable={!verifying}
+                                    style={styles.mfaCodeInput}
                                 />
                             )}
 
+                            {/* =================================================
+                                ERROR
+                            ================================================= */}
                             {error ? (
-                                <View style={styles.errorBox}>
-                                    <Ionicons
-                                        name="alert-circle-outline"
-                                        size={18}
-                                        color={colors.danger}
-                                    />
+                                <View style={styles.mfaErrorBox}>
+                                    <View style={styles.mfaErrorIcon}>
+                                        <Ionicons
+                                            name="alert-circle"
+                                            size={16}
+                                            color={colors.danger}
+                                        />
+                                    </View>
 
-                                    <Text style={styles.errorText}>
+                                    <Text style={styles.mfaErrorText}>
                                         {error}
                                     </Text>
                                 </View>
                             ) : null}
 
-                            <View style={styles.buttonWrapper}>
+                            {/* =================================================
+                                VERIFY BUTTON
+                            ================================================= */}
+                            <View style={styles.mfaButtonWrapper}>
                                 <AppButton
                                     title="Verify and continue"
                                     onPress={handleVerify}
@@ -232,16 +334,32 @@ export default function MFAChallengeScreen() {
                             </View>
                         </View>
 
-                        <View style={styles.infoBox}>
+                        {/* =================================================
+                            INFORMATION
+                        ================================================= */}
+                        <View style={styles.mfaInfoBox}>
                             <Ionicons
                                 name="time-outline"
                                 size={17}
-                                color={colors.goldLight}
+                                color={colors.primaryLight}
                             />
 
-                            <Text style={styles.infoText}>
+                            <Text style={styles.mfaInfoText}>
                                 Authenticator codes change automatically every
                                 30 seconds.
+                            </Text>
+                        </View>
+
+                        <View style={styles.mfaSecurityFooter}>
+                            <Ionicons
+                                name="lock-closed-outline"
+                                size={13}
+                                color={colors.mutedDark}
+                            />
+
+                            <Text style={styles.mfaSecurityFooterText}>
+                                Your authentication is protected by Vaulty's
+                                secure MFA system.
                             </Text>
                         </View>
                     </View>
@@ -250,163 +368,3 @@ export default function MFAChallengeScreen() {
         </SRVBackground>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-
-    content: {
-        flex: 1,
-        padding: spacing.lg,
-        paddingTop: 34,
-    },
-
-    topBar: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-
-    eyebrow: {
-        color: colors.gold,
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 2.2,
-    },
-
-    topTitle: {
-        color: colors.textStrong,
-        fontSize: 17,
-        fontWeight: "900",
-        marginTop: 3,
-    },
-
-    signOutButton: {
-        width: 42,
-        height: 42,
-        borderRadius: 14,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-
-    centerContent: {
-        flex: 1,
-        justifyContent: "center",
-        paddingBottom: 30,
-    },
-
-    iconBox: {
-        width: 72,
-        height: 72,
-        borderRadius: 24,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.goldSoft,
-        borderWidth: 1,
-        borderColor: "rgba(212,175,55,0.32)",
-        marginBottom: 20,
-    },
-
-    title: {
-        color: colors.textStrong,
-        fontSize: 29,
-        lineHeight: 37,
-        fontWeight: "900",
-    },
-
-    subtitle: {
-        color: colors.muted,
-        fontSize: 14,
-        lineHeight: 22,
-        marginTop: 8,
-        marginBottom: 22,
-    },
-
-    card: {
-        backgroundColor: "rgba(21,17,31,0.94)",
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        borderRadius: 28,
-        padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.36,
-        shadowRadius: 28,
-        elevation: 12,
-    },
-
-    label: {
-        color: colors.gold,
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 1.8,
-        marginBottom: 10,
-    },
-
-    loadingBox: {
-        height: 74,
-        borderRadius: 18,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: colors.surfaceElevated,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-
-    codeInput: {
-        height: 74,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-        backgroundColor: colors.surfaceElevated,
-        color: colors.textStrong,
-        fontSize: 29,
-        fontWeight: "900",
-        letterSpacing: 9,
-    },
-
-    errorBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginTop: 14,
-        padding: spacing.md,
-        borderRadius: 16,
-        backgroundColor: colors.dangerSoft,
-        borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.45)",
-    },
-
-    errorText: {
-        flex: 1,
-        color: colors.danger,
-        fontSize: 12,
-        fontWeight: "700",
-        lineHeight: 18,
-    },
-
-    buttonWrapper: {
-        marginTop: 18,
-    },
-
-    infoBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        marginTop: 18,
-    },
-
-    infoText: {
-        flex: 1,
-        color: colors.mutedDark,
-        fontSize: 10,
-        lineHeight: 15,
-    },
-});
