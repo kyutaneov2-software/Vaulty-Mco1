@@ -1,3 +1,5 @@
+import { decode } from "base64-arraybuffer";
+
 import { supabase } from "../lib/supabase";
 
 export type MyProfile = {
@@ -37,10 +39,15 @@ export async function getMyProfile(): Promise<MyProfile> {
     };
 }
 
-export async function uploadMyProfileAvatar(
-    imageUri: string,
-    mimeType?: string | null,
-): Promise<string> {
+type UploadAvatarOptions = {
+    base64: string;
+    mimeType?: string | null;
+};
+
+export async function uploadMyProfileAvatar({
+    base64,
+    mimeType,
+}: UploadAvatarOptions): Promise<string> {
     const {
         data: { user },
         error: authError,
@@ -54,29 +61,33 @@ export async function uploadMyProfileAvatar(
         throw new Error("Not authenticated");
     }
 
-    const response = await fetch(imageUri);
-
-    if (!response.ok) {
-        throw new Error("Unable to read the selected image.");
+    if (!base64) {
+        throw new Error("The selected image has no image data.");
     }
 
-    const arrayBuffer = await response.arrayBuffer();
+    /*
+     * ImagePicker's base64 output is JPEG image data.
+     *
+     * Supabase recommends ArrayBuffer for React Native uploads.
+     */
+    const arrayBuffer = decode(base64);
 
-    const actualMimeType = mimeType || "image/jpeg";
+    const contentType = mimeType || "image/jpeg";
 
-    const mimeExtension =
-        actualMimeType.split("/")[1]?.split(";")[0]?.toLowerCase() || "jpeg";
-
-    const extension = mimeExtension === "jpeg" ? "jpg" : mimeExtension;
-
-    const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
+    /*
+     * Keep one predictable avatar file per user.
+     *
+     * This means a new profile photo replaces the previous one
+     * instead of creating unlimited avatar files.
+     */
+    const filePath = `${user.id}/avatar.jpg`;
 
     const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, arrayBuffer, {
-            contentType: actualMimeType,
+            contentType,
             cacheControl: "3600",
-            upsert: false,
+            upsert: true,
         });
 
     if (uploadError) {
@@ -87,7 +98,11 @@ export async function uploadMyProfileAvatar(
         .from("avatars")
         .getPublicUrl(filePath);
 
-    const avatarUrl = publicUrlData.publicUrl;
+    /*
+     * Add a cache-busting query so the new photo appears
+     * immediately after replacing the previous image.
+     */
+    const avatarUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
 
     const { error: profileError } = await supabase
         .from("profiles")

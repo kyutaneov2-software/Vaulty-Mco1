@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import { useCallback, useState } from "react";
 
@@ -38,18 +38,27 @@ export default function ProfileScreen() {
 
     const [loggingOut, setLoggingOut] = useState(false);
 
-    /*
-     * Load profile photo.
-     */
+        /*
+        * Load profile photo.
+        */
     const loadProfile = useCallback(async () => {
         try {
             const profile = await getMyProfile();
-
+    
             setAvatarUrl(profile.avatarUrl);
         } catch (error) {
             console.error("Failed to load profile:", error);
         }
     }, []);
+    
+    /*
+        * Load the latest profile every time this screen is focused.
+        */
+    useFocusEffect(
+        useCallback(() => {
+            loadProfile();
+        }, [loadProfile])
+    );
 
     /*
      * Choose and upload profile photo.
@@ -79,20 +88,29 @@ export default function ProfileScreen() {
                 aspect: [1, 1],
                 quality: 0.85,
                 exif: false,
+                base64: true,
             });
 
-            if (result.canceled || !result.assets?.length) {
+            if (
+                result.canceled ||
+                !result.assets ||
+                result.assets.length === 0
+            ) {
                 return;
             }
 
             const image = result.assets[0];
 
+            if (!image.base64) {
+                throw new Error("Unable to read the selected image data.");
+            }
+
             setUploading(true);
 
-            const uploadedUrl = await uploadMyProfileAvatar(
-                image.uri,
-                image.mimeType,
-            );
+            const uploadedUrl = await uploadMyProfileAvatar({
+                base64: image.base64,
+                mimeType: image.mimeType,
+            });
 
             setAvatarUrl(uploadedUrl);
 
@@ -105,7 +123,9 @@ export default function ProfileScreen() {
 
             Alert.alert(
                 "Unable to update photo",
-                "Something went wrong while uploading your profile picture. Please try again.",
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong while uploading your profile picture. Please try again.",
             );
         } finally {
             setUploading(false);
@@ -955,4 +975,3 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
 });
- 
