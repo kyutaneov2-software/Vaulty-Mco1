@@ -2,58 +2,157 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
 import { colors } from "../../constants/theme";
+import { navigationStyles as styles } from "../../styles/navigation.styles";
 
+/* =========================================================
+TYPE: TabRoute
+
+Defines the supported authenticated application tabs.
+========================================================= */
+
+type TabRoute = "index" | "wallet" | "profile";
+
+/* =========================================================
+FUNCTION: getTabIcons
+
+Returns the focused and unfocused Ionicons associated
+with each Vaulty application tab.
+========================================================= */
+const getTabIcons = (
+    route: TabRoute,
+    focused: boolean,
+): keyof typeof Ionicons.glyphMap => {
+    const icons: Record<
+        TabRoute,
+        {
+            focused: keyof typeof Ionicons.glyphMap;
+            unfocused: keyof typeof Ionicons.glyphMap;
+        }
+    > = {
+        index: {
+            focused: "home",
+            unfocused: "home-outline",
+        },
+
+        wallet: {
+            focused: "wallet",
+            unfocused: "wallet-outline",
+        },
+
+        profile: {
+            focused: "person",
+            unfocused: "person-outline",
+        },
+    };
+
+    return focused ? icons[route].focused : icons[route].unfocused;
+};
+
+/* =========================================================
+    FUNCTION: AppLayout
+
+    Configures Vaulty's authenticated bottom-tab
+    navigation shared by Android and iOS.
+========================================================= */
 export default function AppLayout() {
     return (
         <Tabs
             screenOptions={({ route }) => ({
+                /* =============================================
+                    HIDE NATIVE SCREEN HEADERS
+
+                    Each Vaulty screen provides its own visual
+                    header.
+                ============================================= */
+
                 headerShown: false,
 
-                tabBarActiveTintColor: colors.goldLight,
+                /* =============================================
+                    TAB COLORS
+                ============================================= */
+
+                tabBarActiveTintColor: colors.primaryLight,
+
                 tabBarInactiveTintColor: colors.mutedDark,
 
-                tabBarStyle: {
-                    height: 72,
+                /* =============================================
+                TAB BAR
+                ============================================= */
 
-                    paddingTop: 8,
-                    paddingBottom: 10,
+                tabBarStyle: styles.tabBar,
 
-                    backgroundColor: colors.surface,
+                /* =============================================
+                    TAB ITEM
+                ============================================= */
 
-                    borderTopWidth: 1,
-                    borderTopColor: colors.border,
-                },
+                tabBarItemStyle: styles.tabItem,
 
-                tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: "700",
-                },
+                /* =============================================
+                    TAB LABEL
+                ============================================= */
 
-                tabBarIcon: ({ color, size }) => {
-                    const icons: Record<
-                        string,
-                        keyof typeof Ionicons.glyphMap
-                    > = {
-                        index: "home-outline",
-                        wallet: "wallet-outline",
-                        profile: "person-outline",
-                    };
+                tabBarLabelStyle: styles.tabLabel,
 
+                /* =============================================
+                    TAB ICON
+                ============================================= */
+
+                tabBarIcon: ({ color, focused }) => {
                     return (
                         <Ionicons
-                            name={icons[route.name] ?? "ellipse-outline"}
-                            size={size}
+                            name={getTabIcons(route.name as TabRoute, focused)}
+                            size={22}
                             color={color}
+                            style={styles.tabIcon}
                         />
                     );
                 },
+
+                /* =============================================
+                KEYBOARD BEHAVIOR
+
+                Prevents the bottom tab bar from occupying
+                the keyboard area when text input is active.
+                ============================================= */
+
+                tabBarHideOnKeyboard: true,
             })}
         >
-            <Tabs.Screen name="index" options={{ title: "Home" }} />
+            {/* =================================================
+                HOME
+            ================================================= */}
 
-            <Tabs.Screen name="wallet" options={{ title: "Wallet" }} />
+            <Tabs.Screen
+                name="index"
+                options={{
+                    title: "Home",
+                    tabBarAccessibilityLabel: "Home",
+                }}
+            />
 
-            <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+            {/* =================================================
+                WALLET
+            ================================================= */}
+
+            <Tabs.Screen
+                name="wallet"
+                options={{
+                    title: "Wallet",
+                    tabBarAccessibilityLabel: "Wallet",
+                }}
+            />
+
+            {/* =================================================
+                PROFILE
+            ================================================= */}
+
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    title: "Profile",
+                    tabBarAccessibilityLabel: "Profile",
+                }}
+            />
         </Tabs>
     );
 }

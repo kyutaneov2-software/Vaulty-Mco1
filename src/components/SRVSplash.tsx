@@ -1,91 +1,97 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import SRVLogo from "./SRVLogo";
 import { colors, gradients } from "../constants/theme";
+import { splashStyles as styles } from "../styles/splash.styles";
 
+/* =========================================================
+COMPONENT: SRVSplash
+
+Displays the initial Vaulty loading screen with the
+application's purple-to-black visual identity.
+========================================================= */
 export default function SRVSplash() {
     return (
         <View style={styles.container}>
+            {/* =================================================
+                BACKGROUND GRADIENT
+            ================================================= */}
+
             <LinearGradient
                 colors={gradients.background}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
+                start={{
+                    x: 0.5,
+                    y: 0,
+                }}
+                end={{
+                    x: 0.5,
+                    y: 1,
+                }}
+                locations={[0, 0.22, 0.48, 0.72, 1]}
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                }}
             />
 
+            {/* =================================================
+                AMBIENT GLOWS
+            ================================================= */}
+
             <View style={styles.glowTop} />
+
+            <View style={styles.glowCenter} />
+
             <View style={styles.glowBottom} />
 
+            {/* =================================================
+                MAIN CONTENT
+            ================================================= */}
+
             <View style={styles.content}>
-                <SRVLogo size={190} showText={true} />
+                <View style={styles.logoArea}>
+                    <View style={styles.logoGlow} />
+
+                    <SRVLogo size={190} showText={true} />
+                </View>
+
+                {/* =================================================
+                    LOADING STATUS
+                ================================================= */}
 
                 <View style={styles.loaderContainer}>
-                    <ActivityIndicator size="small" color={colors.gold} />
+                    <View style={styles.loaderRow}>
+                        <ActivityIndicator
+                            size="small"
+                            color={colors.primaryLight}
+                        />
+                    </View>
 
                     <Text style={styles.loadingText}>
                         SECURE STORAGE. SIMPLIFIED.
                     </Text>
+
+                    <Text style={styles.loadingSubtext}>
+                        Preparing your Vaulty experience
+                    </Text>
                 </View>
             </View>
 
-            <Text style={styles.footer}>SMART RENTAL VAULT</Text>
+            {/* =================================================
+                FOOTER
+            ================================================= */}
+
+            <View style={styles.footer}>
+                <View style={styles.footerLine} />
+
+                <Text style={styles.footerTitle}>SMART RENTAL VAULT</Text>
+
+                <Text style={styles.footerSubtitle}>VAULTY MOBILE</Text>
+            </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    content: {
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    loaderContainer: {
-        alignItems: "center",
-        marginTop: 34,
-    },
-
-    loadingText: {
-        color: colors.muted,
-        fontSize: 10,
-        fontWeight: "700",
-        letterSpacing: 1.7,
-        marginTop: 12,
-    },
-
-    footer: {
-        position: "absolute",
-        bottom: 42,
-        color: colors.mutedDark,
-        fontSize: 9,
-        fontWeight: "700",
-        letterSpacing: 2,
-    },
-
-    glowTop: {
-        position: "absolute",
-        width: 320,
-        height: 320,
-        borderRadius: 160,
-        backgroundColor: "rgba(139, 92, 246, 0.08)",
-        top: -170,
-        right: -100,
-    },
-
-    glowBottom: {
-        position: "absolute",
-        width: 280,
-        height: 280,
-        borderRadius: 140,
-        backgroundColor: "rgba(212, 175, 55, 0.05)",
-        bottom: -150,
-        left: -100,
-    },
-});

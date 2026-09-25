@@ -1,34 +1,34 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as ImagePicker from "expo-image-picker";
 import { router, useFocusEffect } from "expo-router";
-
 import { useCallback, useState } from "react";
-
 import {
     ActivityIndicator,
     Alert,
     Image,
     Pressable,
     ScrollView,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
 
-import * as ImagePicker from "expo-image-picker";
-
-import Ionicons from "@expo/vector-icons/Ionicons";
-
 import SRVBackground from "../../components/SRVBackground";
 import SRVAvatar from "../../components/SRVAvatar";
-
-import { colors, radius, spacing } from "../../constants/theme";
-
+import { colors } from "../../constants/theme";
 import { useAuth } from "../../context/AuthContext";
-
 import {
     getMyProfile,
     uploadMyProfileAvatar,
 } from "../../services/profileService";
+import { profileStyles as styles } from "../../styles/profile.styles";
 
+/* =========================================================
+   COMPONENT: ProfileScreen
+
+   Displays the authenticated user's profile information,
+   profile photo management, account options, wallet access,
+   application information, and logout controls.
+========================================================= */
 export default function ProfileScreen() {
     const { user, signOut } = useAuth();
 
@@ -38,31 +38,41 @@ export default function ProfileScreen() {
 
     const [loggingOut, setLoggingOut] = useState(false);
 
-        /*
-        * Load profile photo.
-        */
+    /* =====================================================
+       FUNCTION: loadProfile
+
+       Loads the latest profile data, including the current
+       profile photo.
+    ===================================================== */
     const loadProfile = useCallback(async () => {
         try {
             const profile = await getMyProfile();
-    
+
             setAvatarUrl(profile.avatarUrl);
         } catch (error) {
             console.error("Failed to load profile:", error);
         }
     }, []);
-    
-    /*
-        * Load the latest profile every time this screen is focused.
-        */
+
+    /* =====================================================
+       EFFECT: REFRESH PROFILE ON FOCUS
+
+       Reloads the profile every time the Profile screen
+       receives focus.
+    ===================================================== */
     useFocusEffect(
         useCallback(() => {
             loadProfile();
-        }, [loadProfile])
+        }, [loadProfile]),
     );
 
-    /*
-     * Choose and upload profile photo.
-     */
+    /* =====================================================
+       FUNCTION: handlePickAvatar
+
+       Requests photo-library permission, lets the user
+       choose a square image, and uploads the selected
+       profile photo.
+    ===================================================== */
     const handlePickAvatar = async () => {
         if (uploading) {
             return;
@@ -132,11 +142,14 @@ export default function ProfileScreen() {
         }
     };
 
-    /*
-     * Logout.
-     */
+    /* =====================================================
+       FUNCTION: handleLogout
+
+       Shows a confirmation dialog and signs the user out
+       after confirmation.
+    ===================================================== */
     const handleLogout = () => {
-        Alert.alert("Log out", "Are you sure you want to log out of SRV?", [
+        Alert.alert("Log out", "Are you sure you want to log out of Vaulty?", [
             {
                 text: "Cancel",
                 style: "cancel",
@@ -163,12 +176,77 @@ export default function ProfileScreen() {
         ]);
     };
 
+    /* =====================================================
+       FUNCTION: handleWalletPress
+
+       Navigates the user to the Wallet screen.
+    ===================================================== */
+    const handleWalletPress = () => {
+        router.push("/wallet");
+    };
+
+    /* =====================================================
+       FUNCTION: handlePersonalInformationPress
+
+       Placeholder for the future personal-information
+       editing screen.
+    ===================================================== */
+    const handlePersonalInformationPress = () => {
+        // Personal information editing will be connected later.
+    };
+
+    /* =====================================================
+       FUNCTION: handleSecurityPress
+
+       Placeholder for the future account-security screen.
+    ===================================================== */
+    const handleSecurityPress = () => {
+        // Security settings will be connected later.
+    };
+
+    /* =====================================================
+       FUNCTION: handleNotificationsPress
+
+       Placeholder for the future notification-preferences
+       screen.
+    ===================================================== */
+    const handleNotificationsPress = () => {
+        // Notification preferences will be connected later.
+    };
+
+    /* =====================================================
+       FUNCTION: handleAboutPress
+
+       Placeholder for the future About Vaulty screen.
+    ===================================================== */
+    const handleAboutPress = () => {
+        // About information will be connected later.
+    };
+
+    /* =====================================================
+       FUNCTION: handleTermsPress
+
+       Placeholder for the future Terms & Conditions screen.
+    ===================================================== */
+    const handleTermsPress = () => {
+        // Terms and conditions will be connected later.
+    };
+
+    /* =====================================================
+       FUNCTION: handlePrivacyPress
+
+       Placeholder for the future Privacy Policy screen.
+    ===================================================== */
+    const handlePrivacyPress = () => {
+        // Privacy policy will be connected later.
+    };
+
     return (
         <SRVBackground>
             <View style={styles.screen}>
                 {/* =================================================
-    STICKY HEADER
-================================================= */}
+                    STICKY HEADER
+                ================================================= */}
 
                 <View style={styles.stickyHeader}>
                     <View style={styles.header}>
@@ -190,7 +268,7 @@ export default function ProfileScreen() {
                     </View>
 
                     <Text style={styles.subtitle}>
-                        Manage your SRV account.
+                        Manage your Vaulty account.
                     </Text>
                 </View>
 
@@ -242,7 +320,7 @@ export default function ProfileScreen() {
 
                         <View style={styles.profileInfo}>
                             <Text style={styles.name}>
-                                {user?.name ?? "SRV User"}
+                                {user?.name ?? "Vaulty User"}
                             </Text>
 
                             <Text style={styles.email}>
@@ -270,7 +348,7 @@ export default function ProfileScreen() {
                             <Ionicons
                                 name="image-outline"
                                 size={17}
-                                color={colors.gold}
+                                color={colors.primaryLight}
                             />
 
                             <Text style={styles.changePhotoText}>
@@ -280,8 +358,8 @@ export default function ProfileScreen() {
                     </View>
 
                     <Text style={styles.photoHint}>
-                        Choose a square photo. It will be used across your SRV
-                        profile and dashboard.
+                        Choose a square photo. It will be used across your
+                        Vaulty profile and dashboard.
                     </Text>
 
                     {/* =================================================
@@ -296,7 +374,7 @@ export default function ProfileScreen() {
                                 icon="person-outline"
                                 title="Personal information"
                                 subtitle="Name and email"
-                                onPress={() => {}}
+                                onPress={handlePersonalInformationPress}
                             />
 
                             <MenuDivider />
@@ -305,7 +383,7 @@ export default function ProfileScreen() {
                                 icon="shield-checkmark-outline"
                                 title="Security"
                                 subtitle="Password and account security"
-                                onPress={() => {}}
+                                onPress={handleSecurityPress}
                             />
 
                             <MenuDivider />
@@ -314,7 +392,7 @@ export default function ProfileScreen() {
                                 icon="notifications-outline"
                                 title="Notifications"
                                 subtitle="Notification preferences"
-                                onPress={() => {}}
+                                onPress={handleNotificationsPress}
                             />
                         </View>
                     </View>
@@ -327,23 +405,23 @@ export default function ProfileScreen() {
                         <Text style={styles.sectionTitle}>Wallet</Text>
 
                         <Pressable
-                            onPress={() => router.push("/wallet")}
+                            onPress={handleWalletPress}
                             style={({ pressed }) => [
                                 styles.walletCard,
-                                pressed && styles.pressed,
+                                pressed && styles.walletCardPressed,
                             ]}
                         >
                             <View style={styles.walletIcon}>
                                 <Ionicons
                                     name="wallet-outline"
                                     size={22}
-                                    color={colors.gold}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
                             <View style={styles.walletCopy}>
                                 <Text style={styles.walletTitle}>
-                                    SRV Wallet
+                                    Vaulty Wallet
                                 </Text>
 
                                 <Text style={styles.walletSubtitle}>
@@ -369,9 +447,9 @@ export default function ProfileScreen() {
                         <View style={styles.menuCard}>
                             <MenuItem
                                 icon="information-circle-outline"
-                                title="About SRV"
+                                title="About Vaulty"
                                 subtitle="Smart Rental Vault"
-                                onPress={() => {}}
+                                onPress={handleAboutPress}
                             />
 
                             <MenuDivider />
@@ -380,7 +458,7 @@ export default function ProfileScreen() {
                                 icon="document-text-outline"
                                 title="Terms & conditions"
                                 subtitle="Coming soon"
-                                onPress={() => {}}
+                                onPress={handleTermsPress}
                             />
 
                             <MenuDivider />
@@ -389,7 +467,7 @@ export default function ProfileScreen() {
                                 icon="lock-closed-outline"
                                 title="Privacy policy"
                                 subtitle="Coming soon"
-                                onPress={() => {}}
+                                onPress={handlePrivacyPress}
                             />
                         </View>
                     </View>
@@ -430,10 +508,10 @@ export default function ProfileScreen() {
                     ================================================= */}
 
                     <View style={styles.footer}>
-                        <Text style={styles.version}>Smart Rental Vault</Text>
+                        <Text style={styles.version}>SMART RENTAL VAULT</Text>
 
                         <Text style={styles.versionNumber}>
-                            SRV Mobile • Development Build
+                            Vaulty Mobile • Development Build
                         </Text>
                     </View>
                 </ScrollView>
@@ -443,7 +521,10 @@ export default function ProfileScreen() {
 }
 
 /* =========================================================
-   MENU ITEM
+   TYPE: MenuItemProps
+
+   Defines the properties accepted by the reusable
+   profile menu item component.
 ========================================================= */
 
 type MenuItemProps = {
@@ -453,6 +534,12 @@ type MenuItemProps = {
     onPress: () => void;
 };
 
+/* =========================================================
+   COMPONENT: MenuItem
+
+   Renders a reusable account or information menu row
+   with an icon, title, subtitle, and navigation indicator.
+========================================================= */
 function MenuItem({ icon, title, subtitle, onPress }: MenuItemProps) {
     return (
         <Pressable
@@ -463,7 +550,7 @@ function MenuItem({ icon, title, subtitle, onPress }: MenuItemProps) {
             ]}
         >
             <View style={styles.menuIcon}>
-                <Ionicons name={icon} size={20} color={colors.gold} />
+                <Ionicons name={icon} size={20} color={colors.primaryLight} />
             </View>
 
             <View style={styles.menuCopy}>
@@ -482,496 +569,10 @@ function MenuItem({ icon, title, subtitle, onPress }: MenuItemProps) {
 }
 
 /* =========================================================
-   DIVIDER
-========================================================= */
+   COMPONENT: MenuDivider
 
+   Renders the divider between profile menu items.
+========================================================= */
 function MenuDivider() {
     return <View style={styles.divider} />;
 }
-
-/* =========================================================
-   STYLES
-========================================================= */
-
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-    },
-
-    /* =====================================================
-       STICKY HEADER
-    ===================================================== */
-
-    stickyHeader: {
-        backgroundColor: colors.background,
-
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-
-        paddingTop: 48,
-        paddingHorizontal: spacing.lg,
-        paddingBottom: 16,
-
-        zIndex: 20,
-        elevation: 8,
-
-        shadowColor: "#000000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 10,
-    },
-
-    header: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "space-between",
-    },
-
-    headerCopy: {
-        flex: 1,
-    },
-
-    eyebrow: {
-        color: colors.gold,
-
-        fontSize: 10,
-        fontWeight: "900",
-
-        letterSpacing: 2.2,
-
-        marginBottom: 4,
-    },
-
-    title: {
-        color: colors.textStrong,
-
-        fontSize: 28,
-        fontWeight: "900",
-    },
-
-    subtitle: {
-        color: colors.mutedDark,
-
-        fontSize: 12,
-
-        marginTop: 6,
-
-        paddingRight: 55,
-    },
-
-    /* =====================================================
-       PAGE
-    ===================================================== */
-
-    page: {
-        flex: 1,
-
-        backgroundColor: "transparent",
-    },
-
-    content: {
-        padding: spacing.lg,
-
-        paddingTop: spacing.lg,
-
-        paddingBottom: 48,
-
-        gap: spacing.lg,
-    },
-
-    /* =====================================================
-       PROFILE CARD
-    ===================================================== */
-
-    profileCard: {
-        alignItems: "center",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.lg,
-    },
-
-    avatarButton: {
-        position: "relative",
-
-        marginBottom: 14,
-    },
-
-    avatarButtonPressed: {
-        opacity: 0.8,
-
-        transform: [
-            {
-                scale: 0.98,
-            },
-        ],
-    },
-
-    cameraButton: {
-        position: "absolute",
-
-        right: -2,
-        bottom: -2,
-
-        width: 32,
-        height: 32,
-
-        borderRadius: 12,
-
-        backgroundColor: colors.gold,
-
-        borderWidth: 2,
-        borderColor: colors.surface,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    profileInfo: {
-        alignItems: "center",
-
-        gap: 5,
-    },
-
-    name: {
-        color: colors.textStrong,
-
-        fontSize: 20,
-        fontWeight: "900",
-    },
-
-    email: {
-        color: colors.muted,
-
-        fontSize: 13,
-    },
-
-    activeBadge: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: 6,
-
-        backgroundColor: colors.successSoft,
-
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-
-        borderRadius: radius.pill,
-
-        marginTop: 3,
-    },
-
-    activeDot: {
-        width: 7,
-        height: 7,
-
-        borderRadius: 4,
-
-        backgroundColor: colors.success,
-    },
-
-    activeText: {
-        color: colors.success,
-
-        fontSize: 11,
-        fontWeight: "800",
-    },
-
-    changePhotoButton: {
-        flexDirection: "row",
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        gap: 7,
-
-        marginTop: 17,
-
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-
-        borderRadius: radius.pill,
-
-        backgroundColor: colors.goldSoft,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-    },
-
-    changePhotoPressed: {
-        opacity: 0.75,
-    },
-
-    changePhotoDisabled: {
-        opacity: 0.5,
-    },
-
-    changePhotoText: {
-        color: colors.goldLight,
-
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    photoHint: {
-        color: colors.mutedDark,
-
-        fontSize: 11,
-
-        lineHeight: 17,
-
-        textAlign: "center",
-
-        marginTop: -9,
-
-        paddingHorizontal: 20,
-    },
-
-    headerLogoContainer: {
-        width: 52,
-        height: 52,
-
-        borderRadius: 16,
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginLeft: 12,
-    },
-
-    headerLogo: {
-        width: 40,
-        height: 40,
-    },
-
-    /* =====================================================
-        SECTIONS
-    ===================================================== */
-
-    section: {
-        gap: 10,
-    },
-
-    sectionTitle: {
-        color: colors.textStrong,
-
-        fontSize: 18,
-        fontWeight: "900",
-    },
-
-    /* =====================================================
-        MENU
-    ===================================================== */
-
-    menuCard: {
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        borderRadius: radius.lg,
-
-        overflow: "hidden",
-    },
-
-    menuItem: {
-        minHeight: 72,
-
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        paddingHorizontal: spacing.md,
-
-        gap: 12,
-    },
-
-    menuPressed: {
-        backgroundColor: colors.surfaceSoft,
-    },
-
-    menuIcon: {
-        width: 42,
-        height: 42,
-
-        borderRadius: 13,
-
-        backgroundColor: colors.goldSoft,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    menuCopy: {
-        flex: 1,
-
-        gap: 3,
-    },
-
-    menuTitle: {
-        color: colors.text,
-
-        fontSize: 14,
-        fontWeight: "800",
-    },
-
-    menuSubtitle: {
-        color: colors.muted,
-
-        fontSize: 12,
-    },
-
-    divider: {
-        height: 1,
-
-        backgroundColor: colors.border,
-
-        marginLeft: 66,
-    },
-
-    /* =====================================================
-        WALLET
-    ===================================================== */
-
-    walletCard: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.md,
-
-        gap: 12,
-    },
-
-    walletIcon: {
-        width: 46,
-        height: 46,
-
-        borderRadius: 14,
-
-        backgroundColor: colors.goldSoft,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    walletCopy: {
-        flex: 1,
-
-        gap: 3,
-    },
-
-    walletTitle: {
-        color: colors.text,
-
-        fontSize: 15,
-        fontWeight: "800",
-    },
-
-    walletSubtitle: {
-        color: colors.muted,
-
-        fontSize: 12,
-    },
-
-    /* =====================================================
-        LOGOUT
-    ===================================================== */
-
-    logoutButton: {
-        minHeight: 54,
-
-        flexDirection: "row",
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        gap: 8,
-
-        backgroundColor: colors.dangerSoft,
-
-        borderWidth: 1,
-        borderColor: colors.danger,
-
-        borderRadius: radius.md,
-    },
-
-    logoutPressed: {
-        opacity: 0.75,
-    },
-
-    logoutDisabled: {
-        opacity: 0.5,
-    },
-
-    logoutText: {
-        color: colors.danger,
-
-        fontSize: 15,
-        fontWeight: "800",
-    },
-
-    pressed: {
-        opacity: 0.75,
-    },
-
-    /* =====================================================
-        FOOTER
-    ===================================================== */
-
-    footer: {
-        alignItems: "center",
-
-        paddingTop: spacing.md,
-
-        paddingBottom: 20,
-    },
-
-    version: {
-        color: colors.gold,
-
-        textAlign: "center",
-
-        fontSize: 12,
-        fontWeight: "800",
-
-        letterSpacing: 1.5,
-    },
-
-    versionNumber: {
-        color: colors.mutedDark,
-
-        textAlign: "center",
-
-        fontSize: 11,
-
-        marginTop: 4,
-    },
-});

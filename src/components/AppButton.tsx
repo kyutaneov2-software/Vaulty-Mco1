@@ -1,12 +1,14 @@
-import {
-    ActivityIndicator,
-    Pressable,
-    StyleSheet,
-    Text,
-    ViewStyle,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, ViewStyle } from "react-native";
 
-import { colors, radius, spacing } from "../constants/theme";
+import { colors } from "../constants/theme";
+import { buttonStyles as styles } from "../styles/button.styles";
+
+/* =========================================================
+   TYPE: Props
+
+   Defines the properties accepted by the reusable
+   AppButton component.
+========================================================= */
 
 type Props = {
     title: string;
@@ -16,6 +18,12 @@ type Props = {
     style?: ViewStyle;
 };
 
+/* =========================================================
+   COMPONENT: AppButton
+
+   Renders a reusable Vaulty button supporting primary,
+   secondary, ghost, and legacy accent variants.
+========================================================= */
 export function AppButton({
     title,
     onPress,
@@ -24,8 +32,24 @@ export function AppButton({
     style,
 }: Props) {
     const isPrimary = variant === "primary";
+
     const isSecondary = variant === "secondary";
+
     const isGold = variant === "gold";
+
+    /* =====================================================
+       FUNCTION: getLoadingColor
+
+       Determines the appropriate loading indicator color
+       for the selected button variant.
+    ===================================================== */
+    const getLoadingColor = () => {
+        if (isPrimary || isGold) {
+            return colors.black;
+        }
+
+        return colors.text;
+    };
 
     return (
         <Pressable
@@ -35,25 +59,37 @@ export function AppButton({
                 styles.base,
 
                 isPrimary && styles.primary,
+
                 isSecondary && styles.secondary,
+
                 isGold && styles.gold,
+
                 variant === "ghost" && styles.ghost,
 
                 pressed && styles.pressed,
+
                 style,
             ]}
         >
+            {/* =================================================
+                LOADING STATE
+            ================================================= */}
+
             {loading ? (
-                <ActivityIndicator
-                    color={isPrimary || isGold ? colors.black : colors.text}
-                />
+                <ActivityIndicator color={getLoadingColor()} />
             ) : (
+                /* =============================================
+                   BUTTON TEXT
+                ============================================= */
+
                 <Text
                     style={[
                         styles.text,
 
                         isSecondary && styles.secondaryText,
+
                         isGold && styles.goldText,
+
                         variant === "ghost" && styles.ghostText,
                     ]}
                 >
@@ -63,58 +99,3 @@ export function AppButton({
         </Pressable>
     );
 }
-
-const styles = StyleSheet.create({
-    base: {
-        minHeight: 52,
-        borderRadius: radius.md,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingHorizontal: spacing.lg,
-    },
-
-    primary: {
-        backgroundColor: colors.primary,
-        borderWidth: 1,
-        borderColor: colors.primary,
-    },
-
-    secondary: {
-        backgroundColor: colors.surfaceSoft,
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-    },
-
-    gold: {
-        backgroundColor: colors.gold,
-        borderWidth: 1,
-        borderColor: colors.goldLight,
-    },
-
-    ghost: {
-        backgroundColor: colors.transparent,
-    },
-
-    pressed: {
-        opacity: 0.8,
-        transform: [{ scale: 0.99 }],
-    },
-
-    text: {
-        color: colors.white,
-        fontWeight: "800",
-        fontSize: 16,
-    },
-
-    secondaryText: {
-        color: colors.text,
-    },
-
-    goldText: {
-        color: colors.black,
-    },
-
-    ghostText: {
-        color: colors.goldLight,
-    },
-});

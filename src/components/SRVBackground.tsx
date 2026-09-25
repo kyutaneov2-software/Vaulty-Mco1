@@ -9,10 +9,10 @@ type Props = {
 };
 
 /* =========================================================
-   COMPONENT: SRVBackground
+    COMPONENT: SRVBackground
 
-   Provides the shared Vaulty black-to-purple vertical
-   background used throughout the application.
+    Provides the shared Vaulty black-to-purple vertical
+    background used throughout the application.
 ========================================================= */
 export default function SRVBackground({ children }: Props) {
     return (

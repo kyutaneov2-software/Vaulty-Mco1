@@ -1,6 +1,16 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 
-import { colors } from "../constants/theme";
+import {
+    avatarStyles as styles,
+    getAvatarDimensions,
+    getAvatarInitialsStyle,
+} from "../styles/avatar.styles";
+
+/* =========================================================
+    TYPE: Props
+
+    Defines the optional properties accepted by SRVAvatar.
+========================================================= */
 
 type Props = {
     size?: number;
@@ -8,7 +18,21 @@ type Props = {
     imageUrl?: string | null;
 };
 
+/* =========================================================
+COMPONENT: SRVAvatar
+
+Displays a user's profile image when available and
+automatically falls back to their initials when no
+profile image exists.
+========================================================= */
 export default function SRVAvatar({ size = 52, name, imageUrl }: Props) {
+    /* =====================================================
+        GENERATE INITIALS
+
+        Converts the user's name into a maximum of two
+        uppercase initials.
+    ===================================================== */
+
     const initials =
         name
             ?.trim()
@@ -19,99 +43,45 @@ export default function SRVAvatar({ size = 52, name, imageUrl }: Props) {
             .slice(0, 2)
             .toUpperCase() || "SR";
 
+    /* =====================================================
+        DYNAMIC DIMENSIONS
+    ===================================================== */
+
+    const avatarDimensions = getAvatarDimensions(size);
+
+    const initialsStyle = getAvatarInitialsStyle(size);
+
     return (
-        <View
-            style={[
-                styles.container,
-                {
-                    width: size,
-                    height: size,
-                    borderRadius: size / 2.6,
-                },
-            ]}
-        >
+        <View style={[styles.container, avatarDimensions]}>
+            {/* =================================================
+                PROFILE IMAGE
+            ================================================= */}
+
             {imageUrl ? (
                 <Image
-                    source={{ uri: imageUrl }}
-                    style={{
-                        width: size,
-                        height: size,
-                        borderRadius: size / 2.6,
+                    source={{
+                        uri: imageUrl,
                     }}
+                    style={styles.image}
                     resizeMode="cover"
                 />
             ) : (
-                <View
-                    style={[
-                        styles.fallback,
-                        {
-                            width: size,
-                            height: size,
-                            borderRadius: size / 2.6,
-                        },
-                    ]}
-                >
-                    <Text
-                        style={[
-                            styles.initials,
-                            {
-                                fontSize: Math.max(12, size * 0.3),
-                            },
-                        ]}
-                    >
+                /* =================================================
+                    INITIALS FALLBACK
+                ================================================= */
+
+                <View style={[styles.fallback, avatarDimensions]}>
+                    <Text style={[styles.initials, initialsStyle]}>
                         {initials}
                     </Text>
                 </View>
             )}
 
-            <View
-                style={[
-                    styles.goldRing,
-                    {
-                        width: size,
-                        height: size,
-                        borderRadius: size / 2.6,
-                    },
-                ]}
-            />
+            {/* =================================================
+                PURPLE OUTER RING
+            ================================================= */}
+
+            <View style={[styles.ring, avatarDimensions]} />
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        overflow: "hidden",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    fallback: {
-        backgroundColor: colors.primarySoft,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    initials: {
-        color: colors.goldLight,
-
-        fontWeight: "900",
-
-        letterSpacing: 1,
-    },
-
-    goldRing: {
-        position: "absolute",
-
-        borderWidth: 1.2,
-        borderColor: colors.gold,
-
-        opacity: 0.75,
-    },
-});

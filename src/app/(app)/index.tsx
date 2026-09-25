@@ -1,31 +1,31 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useFocusEffect } from "expo-router";
-
 import { useCallback, useEffect, useState } from "react";
-
 import {
     ActivityIndicator,
     Pressable,
     RefreshControl,
     ScrollView,
-    StyleSheet,
     Text,
     View,
 } from "react-native";
 
-import Ionicons from "@expo/vector-icons/Ionicons";
-
 import SRVBackground from "../../components/SRVBackground";
 import SRVAvatar from "../../components/SRVAvatar";
-
-import { colors, radius, spacing } from "../../constants/theme";
-
+import { colors } from "../../constants/theme";
 import { useAuth } from "../../context/AuthContext";
-
-import { getMyWallet } from "../../services/walletService";
 import { getMyProfile } from "../../services/profileService";
-
+import { getMyWallet } from "../../services/walletService";
 import { Wallet } from "../../types";
+import { appStyles as styles } from "../../styles/app.styles";
 
+    /* =========================================================
+    COMPONENT: HomeScreen
+
+    Displays the main authenticated Vaulty dashboard,
+    including the user's profile header, wallet, vault
+    discovery area, current rental, and app guidance.
+    ========================================================= */
 export default function HomeScreen() {
     const { user } = useAuth();
 
@@ -39,9 +39,11 @@ export default function HomeScreen() {
 
     const [error, setError] = useState("");
 
-    /*
-     * Load wallet.
-     */
+    /* =====================================================
+        FUNCTION: loadWallet
+
+        Loads the authenticated user's wallet data.
+    ===================================================== */
     const loadWallet = useCallback(async () => {
         try {
             const walletData = await getMyWallet();
@@ -58,12 +60,12 @@ export default function HomeScreen() {
         }
     }, []);
 
-    /*
-     * Load profile avatar.
-     *
-     * This also runs whenever the Home tab gets focus,
-     * so an uploaded photo appears after returning from Profile.
-     */
+    /* =====================================================
+        FUNCTION: loadProfileAvatar
+
+        Loads the user's profile so the latest avatar is
+        reflected on the Home screen.
+    ===================================================== */
     const loadProfileAvatar = useCallback(async () => {
         try {
             const profile = await getMyProfile();
@@ -76,35 +78,50 @@ export default function HomeScreen() {
         }
     }, []);
 
-    /*
-     * Initial screen load.
-     */
-    useEffect(() => {
-        const initialize = async () => {
-            try {
-                setError("");
+    /* =====================================================
+        FUNCTION: initialize
 
-                await Promise.all([loadWallet(), loadProfileAvatar()]);
-            } finally {
-                setLoading(false);
-            }
-        };
+        Performs the initial Home screen data loading.
+    ===================================================== */
+    const initialize = useCallback(async () => {
+        try {
+            setError("");
 
-        initialize();
+            await Promise.all([loadWallet(), loadProfileAvatar()]);
+        } finally {
+            setLoading(false);
+        }
     }, [loadWallet, loadProfileAvatar]);
 
-    /*
-     * Refresh avatar whenever Home receives focus.
-     */
+    /* =====================================================
+        EFFECT: INITIAL LOAD
+
+        Runs once whenever the required loading callbacks
+        are available.
+    ===================================================== */
+    useEffect(() => {
+        initialize();
+    }, [initialize]);
+
+    /* =====================================================
+        EFFECT: REFRESH ON FOCUS
+
+        Reloads the user's avatar whenever the Home screen
+        receives focus, especially after returning from
+        the Profile page.
+    ===================================================== */
     useFocusEffect(
         useCallback(() => {
             loadProfileAvatar();
         }, [loadProfileAvatar]),
     );
 
-    /*
-     * Pull to refresh.
-     */
+    /* =====================================================
+        FUNCTION: handleRefresh
+
+        Refreshes wallet and profile data when the user
+        pulls down on the dashboard.
+    ===================================================== */
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
@@ -116,9 +133,12 @@ export default function HomeScreen() {
         }
     };
 
-    /*
-     * Greeting based on time.
-     */
+    /* =====================================================
+        FUNCTION: getGreeting
+
+        Returns a greeting based on the user's current
+        local time.
+    ===================================================== */
     const getGreeting = () => {
         const hour = new Date().getHours();
 
@@ -135,16 +155,55 @@ export default function HomeScreen() {
 
     const firstName = user?.name?.trim().split(" ")[0] ?? "there";
 
-    /*
-     * Loading screen.
-     */
+    /* =====================================================
+        FUNCTION: handleProfilePress
+
+        Navigates the user to the Profile page.
+    ===================================================== */
+    const handleProfilePress = () => {
+        router.push("/profile");
+    };
+
+    /* =====================================================
+        FUNCTION: handleWalletPress
+
+        Navigates the user to the Wallet page.
+    ===================================================== */
+    const handleWalletPress = () => {
+        router.push("/wallet");
+    };
+
+    /* =====================================================
+        FUNCTION: handleFindVaultPress
+
+        Placeholder navigation handler for the future
+        vault discovery feature.
+    ===================================================== */
+    const handleFindVaultPress = () => {
+        // Vault discovery will be connected later.
+    };
+
+    /* =====================================================
+    FUNCTION: handleNotificationPress
+
+    Placeholder handler for the future notification
+    center.
+    ===================================================== */
+    const handleNotificationPress = () => {
+        // Notifications will be connected later.
+    };
+
+    /* =====================================================
+    LOADING STATE
+    ===================================================== */
+
     if (loading) {
         return (
             <SRVBackground>
                 <View style={styles.loading}>
-                    <ActivityIndicator size="large" color={colors.gold} />
+                    <ActivityIndicator size="large" color={colors.primary} />
 
-                    <Text style={styles.loadingText}>Loading SRV...</Text>
+                    <Text style={styles.loadingText}>Loading Vaulty...</Text>
                 </View>
             </SRVBackground>
         );
@@ -160,7 +219,7 @@ export default function HomeScreen() {
                 <View style={styles.stickyHeader}>
                     <View style={styles.header}>
                         <Pressable
-                            onPress={() => router.push("/profile")}
+                            onPress={handleProfilePress}
                             style={({ pressed }) => [
                                 styles.headerBrand,
                                 pressed && styles.headerBrandPressed,
@@ -186,7 +245,7 @@ export default function HomeScreen() {
                                 styles.notificationButton,
                                 pressed && styles.notificationPressed,
                             ]}
-                            onPress={() => {}}
+                            onPress={handleNotificationPress}
                         >
                             <Ionicons
                                 name="notifications-outline"
@@ -213,7 +272,7 @@ export default function HomeScreen() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={handleRefresh}
-                            tintColor={colors.gold}
+                            tintColor={colors.primary}
                         />
                     }
                 >
@@ -222,7 +281,7 @@ export default function HomeScreen() {
                     ================================================= */}
 
                     <Pressable
-                        onPress={() => router.push("/wallet")}
+                        onPress={handleWalletPress}
                         style={({ pressed }) => [
                             styles.walletCard,
                             pressed && styles.walletCardPressed,
@@ -231,7 +290,7 @@ export default function HomeScreen() {
                         <View style={styles.walletTop}>
                             <View>
                                 <Text style={styles.walletLabel}>
-                                    SRV WALLET
+                                    VAULTY WALLET
                                 </Text>
 
                                 <Text style={styles.walletDescription}>
@@ -243,7 +302,7 @@ export default function HomeScreen() {
                                 <Ionicons
                                     name="wallet-outline"
                                     size={22}
-                                    color={colors.gold}
+                                    color={colors.primaryLight}
                                 />
                             </View>
                         </View>
@@ -263,7 +322,7 @@ export default function HomeScreen() {
                                 <Ionicons
                                     name="arrow-forward"
                                     size={15}
-                                    color={colors.goldLight}
+                                    color={colors.primaryLight}
                                 />
                             </View>
                         </View>
@@ -303,7 +362,7 @@ export default function HomeScreen() {
                         </View>
 
                         <Pressable
-                            onPress={() => {}}
+                            onPress={handleFindVaultPress}
                             style={({ pressed }) => [
                                 styles.findVaultCard,
                                 pressed && styles.findVaultPressed,
@@ -313,7 +372,7 @@ export default function HomeScreen() {
                                 <Ionicons
                                     name="location-outline"
                                     size={28}
-                                    color={colors.gold}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
@@ -353,7 +412,7 @@ export default function HomeScreen() {
                                     <Ionicons
                                         name="cube-outline"
                                         size={21}
-                                        color={colors.gold}
+                                        color={colors.primaryLight}
                                     />
                                 </View>
 
@@ -374,7 +433,7 @@ export default function HomeScreen() {
                                 <Ionicons
                                     name="cube-outline"
                                     size={26}
-                                    color={colors.gold}
+                                    color={colors.primaryLight}
                                 />
                             </View>
 
@@ -389,14 +448,14 @@ export default function HomeScreen() {
                     </View>
 
                     {/* =================================================
-                        HOW SRV WORKS
+                        HOW VAULTY WORKS
                     ================================================= */}
 
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <View>
                                 <Text style={styles.sectionTitle}>
-                                    How SRV works
+                                    How Vaulty works
                                 </Text>
 
                                 <Text style={styles.sectionSubtitle}>
@@ -442,7 +501,7 @@ export default function HomeScreen() {
                             <Ionicons
                                 name="cube-outline"
                                 size={22}
-                                color={colors.gold}
+                                color={colors.primaryLight}
                             />
                         </View>
 
@@ -460,9 +519,12 @@ export default function HomeScreen() {
     );
 }
 
-/* =========================================================
-   STEP COMPONENT
-========================================================= */
+    /* =========================================================
+    TYPE: StepProps
+
+    Defines the properties used by the reusable Step
+    component on the Home screen.
+    ========================================================= */
 
 type StepProps = {
     number: string;
@@ -471,6 +533,12 @@ type StepProps = {
     text: string;
 };
 
+    /* =========================================================
+    COMPONENT: Step
+
+    Renders one instructional step explaining how Vaulty
+    works.
+    ========================================================= */
 function Step({ number, icon, title, text }: StepProps) {
     return (
         <View style={styles.step}>
@@ -479,7 +547,7 @@ function Step({ number, icon, title, text }: StepProps) {
             </View>
 
             <View style={styles.stepIcon}>
-                <Ionicons name={icon} size={20} color={colors.gold} />
+                <Ionicons name={icon} size={20} color={colors.primaryLight} />
             </View>
 
             <View style={styles.stepCopy}>
@@ -490,633 +558,3 @@ function Step({ number, icon, title, text }: StepProps) {
         </View>
     );
 }
-
-/* =========================================================
-   STYLES
-========================================================= */
-
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-    },
-
-    /* =====================================================
-       STICKY HEADER
-    ===================================================== */
-
-    stickyHeader: {
-        backgroundColor: colors.background,
-
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-
-        paddingTop: 48,
-        paddingHorizontal: spacing.lg,
-        paddingBottom: 16,
-
-        zIndex: 20,
-        elevation: 8,
-
-        shadowColor: "#000000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 10,
-    },
-
-    header: {
-        flexDirection: "row",
-
-        justifyContent: "space-between",
-
-        alignItems: "center",
-    },
-
-    headerBrand: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        flex: 1,
-    },
-
-    headerBrandPressed: {
-        opacity: 0.8,
-    },
-
-    headerText: {
-        flex: 1,
-
-        marginLeft: 12,
-    },
-
-    greeting: {
-        color: colors.muted,
-
-        fontSize: 17,
-        fontWeight: "600",
-
-        lineHeight: 22,
-    },
-
-    name: {
-        color: colors.textStrong,
-
-        fontSize: 27,
-        fontWeight: "900",
-
-        lineHeight: 31,
-    },
-
-    headerSubtitle: {
-        color: colors.mutedDark,
-
-        fontSize: 12,
-
-        lineHeight: 18,
-
-        marginTop: 7,
-
-        marginLeft: 64,
-    },
-
-    notificationButton: {
-        width: 46,
-        height: 46,
-
-        borderRadius: 15,
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginLeft: 10,
-    },
-
-    notificationPressed: {
-        backgroundColor: colors.surfaceSoft,
-
-        transform: [
-            {
-                scale: 0.96,
-            },
-        ],
-    },
-
-    /* =====================================================
-       PAGE
-    ===================================================== */
-
-    page: {
-        flex: 1,
-
-        backgroundColor: "transparent",
-    },
-
-    content: {
-        paddingHorizontal: spacing.lg,
-
-        paddingTop: spacing.lg,
-
-        paddingBottom: 48,
-
-        gap: spacing.lg,
-    },
-
-    /* =====================================================
-       LOADING
-    ===================================================== */
-
-    loading: {
-        flex: 1,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        gap: 12,
-    },
-
-    loadingText: {
-        color: colors.muted,
-
-        fontSize: 14,
-    },
-
-    /* =====================================================
-       WALLET
-    ===================================================== */
-
-    walletCard: {
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.lg,
-    },
-
-    walletCardPressed: {
-        opacity: 0.82,
-
-        transform: [
-            {
-                scale: 0.99,
-            },
-        ],
-    },
-
-    walletTop: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "space-between",
-    },
-
-    walletLabel: {
-        color: colors.gold,
-
-        fontSize: 11,
-        fontWeight: "900",
-
-        letterSpacing: 2,
-    },
-
-    walletDescription: {
-        color: colors.muted,
-
-        fontSize: 12,
-
-        marginTop: 3,
-    },
-
-    walletIcon: {
-        width: 46,
-        height: 46,
-
-        borderRadius: 14,
-
-        backgroundColor: colors.goldSoft,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    walletBalance: {
-        color: colors.textStrong,
-
-        fontSize: 48,
-        lineHeight: 54,
-
-        fontWeight: "900",
-
-        marginTop: 24,
-    },
-
-    walletBottom: {
-        flexDirection: "row",
-
-        justifyContent: "space-between",
-
-        alignItems: "center",
-
-        marginTop: 2,
-    },
-
-    walletPoints: {
-        color: colors.goldLight,
-
-        fontSize: 11,
-        fontWeight: "900",
-
-        letterSpacing: 2.5,
-    },
-
-    walletLink: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: 5,
-    },
-
-    walletLinkText: {
-        color: colors.goldLight,
-
-        fontSize: 12,
-        fontWeight: "800",
-    },
-
-    /* =====================================================
-       ERROR
-    ===================================================== */
-
-    errorCard: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: 8,
-
-        backgroundColor: colors.dangerSoft,
-
-        borderWidth: 1,
-        borderColor: colors.danger,
-
-        borderRadius: radius.md,
-
-        padding: spacing.md,
-    },
-
-    errorText: {
-        flex: 1,
-
-        color: colors.danger,
-
-        fontSize: 13,
-
-        lineHeight: 19,
-    },
-
-    /* =====================================================
-       SECTIONS
-    ===================================================== */
-
-    section: {
-        gap: 11,
-    },
-
-    sectionHeader: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        justifyContent: "space-between",
-    },
-
-    sectionTitleRow: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        flex: 1,
-    },
-
-    sectionTitleCopy: {
-        flex: 1,
-    },
-
-    sectionLogo: {
-        width: 42,
-        height: 42,
-
-        borderRadius: 13,
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginRight: 11,
-    },
-
-    sectionTitle: {
-        color: colors.textStrong,
-
-        fontSize: 19,
-        fontWeight: "900",
-    },
-
-    sectionSubtitle: {
-        color: colors.muted,
-
-        fontSize: 13,
-
-        marginTop: 3,
-    },
-
-    /* =====================================================
-       FIND VAULT
-    ===================================================== */
-
-    findVaultCard: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.md,
-
-        gap: 13,
-    },
-
-    findVaultPressed: {
-        backgroundColor: colors.surfaceSoft,
-    },
-
-    findVaultIcon: {
-        width: 54,
-        height: 54,
-
-        borderRadius: 17,
-
-        backgroundColor: colors.goldSoft,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    findVaultCopy: {
-        flex: 1,
-
-        gap: 4,
-    },
-
-    findVaultTitle: {
-        color: colors.text,
-
-        fontSize: 15,
-        fontWeight: "800",
-    },
-
-    findVaultText: {
-        color: colors.muted,
-
-        fontSize: 12,
-        lineHeight: 18,
-    },
-
-    comingSoonBadge: {
-        alignSelf: "flex-start",
-
-        backgroundColor: colors.primarySoft,
-
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-
-        borderRadius: radius.pill,
-
-        marginTop: 2,
-    },
-
-    comingSoonText: {
-        color: colors.goldLight,
-
-        fontSize: 9,
-
-        fontWeight: "900",
-
-        letterSpacing: 1.1,
-    },
-
-    /* =====================================================
-       RENTAL
-    ===================================================== */
-
-    emptyRentalCard: {
-        alignItems: "center",
-
-        justifyContent: "center",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        borderRadius: radius.lg,
-
-        paddingVertical: 32,
-
-        paddingHorizontal: 24,
-    },
-
-    emptyRentalIcon: {
-        width: 54,
-        height: 54,
-
-        borderRadius: 17,
-
-        backgroundColor: colors.primarySoft,
-
-        borderWidth: 1,
-        borderColor: colors.borderStrong,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginBottom: 12,
-    },
-
-    emptyRentalTitle: {
-        color: colors.textStrong,
-
-        fontSize: 16,
-        fontWeight: "800",
-    },
-
-    emptyRentalText: {
-        color: colors.muted,
-
-        fontSize: 13,
-        lineHeight: 19,
-
-        textAlign: "center",
-
-        marginTop: 4,
-
-        maxWidth: 290,
-    },
-
-    /* =====================================================
-       HOW SRV WORKS
-    ===================================================== */
-
-    stepsCard: {
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.border,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.md,
-    },
-
-    step: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        gap: 10,
-
-        paddingVertical: 8,
-    },
-
-    stepNumber: {
-        width: 30,
-        height: 30,
-
-        borderRadius: 10,
-
-        backgroundColor: colors.goldSoft,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    stepNumberText: {
-        color: colors.goldLight,
-
-        fontSize: 10,
-
-        fontWeight: "900",
-    },
-
-    stepIcon: {
-        width: 40,
-        height: 40,
-
-        borderRadius: 12,
-
-        backgroundColor: colors.primarySoft,
-
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    stepCopy: {
-        flex: 1,
-
-        gap: 3,
-    },
-
-    stepTitle: {
-        color: colors.text,
-
-        fontSize: 14,
-        fontWeight: "800",
-    },
-
-    stepText: {
-        color: colors.muted,
-
-        fontSize: 12,
-        lineHeight: 17,
-    },
-
-    stepDivider: {
-        height: 1,
-
-        backgroundColor: colors.border,
-
-        marginLeft: 80,
-    },
-
-    /* =====================================================
-       FOOTER
-    ===================================================== */
-
-    footer: {
-        alignItems: "center",
-
-        paddingTop: 8,
-        paddingBottom: 20,
-    },
-
-    footerLogo: {
-        width: 48,
-        height: 48,
-
-        borderRadius: 14,
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.gold,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        marginBottom: 10,
-    },
-
-    footerTitle: {
-        color: colors.text,
-
-        fontSize: 12,
-        fontWeight: "800",
-
-        letterSpacing: 1,
-    },
-
-    footerText: {
-        color: colors.mutedDark,
-
-        fontSize: 11,
-
-        marginTop: 3,
-    },
-});
