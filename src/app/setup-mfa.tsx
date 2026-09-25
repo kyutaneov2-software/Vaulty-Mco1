@@ -20,6 +20,30 @@ import { colors, radius, spacing } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 
+
+type EnrollmentData = {
+    factorId: string;
+    otpauthUri: string;
+    secret: string;
+};
+
+/**
+ * Prevent duplicate TOTP enrollment requests for the
+ * same Supabase user.
+ *
+ * This is especially important in development because
+ * React may run Effects more than once.
+ */
+const enrollmentCache = new Map<
+    string,
+    EnrollmentData
+>();
+
+const enrollmentRequests = new Map<
+    string,
+    Promise<EnrollmentData>
+>();
+
 export default function SetupMFAScreen() {
     const { refreshAuthState, signOut } = useAuth();
 
@@ -41,16 +65,43 @@ export default function SetupMFAScreen() {
         try {
             setLoading(true);
             setError("");
-
-            const { data: factors, error: listError } =
-                await supabase.auth.mfa.listFactors();
-
+    
+            /**
+             * Get the current authenticated user.
+             */
+            const {
+                data: { user },
+                error: userError,
+            } = await supabase.auth.getUser();
+    
+            if (userError) {
+                throw userError;
+            }
+    
+            if (!user) {
+                throw new Error(
+                    "Your session has expired. Please log in again.",
+                );
+            }
+    
+            const userId = user.id;
+    
+            /**
+             * ---------------------------------------------------------
+             * CHECK CURRENT FACTORS
+             * ---------------------------------------------------------
+             */
+            const {
+                data: factors,
+                error: listError,
+            } = await supabase.auth.mfa.listFactors();
+    
             if (listError) {
                 throw listError;
             }
-
+    
             const totpFactors = factors.totp ?? [];
-
+    
             console.log(
                 "Vaulty TOTP factors:",
                 totpFactors.map((factor) => ({
@@ -59,96 +110,251 @@ export default function SetupMFAScreen() {
                     friendlyName: factor.friendly_name,
                 })),
             );
-
+    
             /**
              * ---------------------------------------------------------
              * CASE 1:
-             * A verified authenticator already exists.
+             * A verified factor already exists.
              *
-             * The user should NOT enroll another authenticator.
-             * Send them to the MFA challenge instead.
+             * Do not enroll another one.
              * ---------------------------------------------------------
              */
             const verifiedFactor = totpFactors.find(
                 (factor) => factor.status === "verified",
             );
-
+    
             if (verifiedFactor) {
-                console.log("Verified Vaulty authenticator already exists.");
-
+                console.log(
+                    "Verified Vaulty authenticator already exists.",
+                );
+    
                 router.replace("/mfa-challenge");
                 return;
             }
-
+    
             /**
              * ---------------------------------------------------------
              * CASE 2:
-             * An old/incomplete enrollment exists.
+             * We already have an enrollment in progress for this
+             * user because of a duplicate Effect invocation.
              *
-             * Remove the stale unverified factor first.
-             *
-             * IMPORTANT:
-             * If unenrollment fails, STOP.
-             * Do not call enroll() and create another factor.
+             * Reuse the existing request.
              * ---------------------------------------------------------
              */
-            const unverifiedFactors = totpFactors.filter(
-                (factor) => factor.status !== "verified",
-            );
-
-            for (const factor of unverifiedFactors) {
-                console.log("Removing stale unverified factor:", factor.id);
-
-                const { error: unenrollError } =
-                    await supabase.auth.mfa.unenroll({
-                        factorId: factor.id,
-                    });
-
-                if (unenrollError) {
-                    console.error(
-                        "Failed to remove stale MFA factor:",
-                        unenrollError,
-                    );
-
-                    throw new Error(
-                        "Vaulty found an unfinished authenticator setup. Please sign out and sign in again before trying to set up your authenticator.",
-                    );
-                }
+            const cachedEnrollment =
+                enrollmentCache.get(userId);
+    
+            if (cachedEnrollment) {
+                console.log(
+                    "Using cached Vaulty authenticator enrollment.",
+                );
+    
+                setFactorId(
+                    cachedEnrollment.factorId,
+                );
+    
+                setOtpauthUri(
+                    cachedEnrollment.otpauthUri,
+                );
+    
+                setSecret(
+                    cachedEnrollment.secret,
+                );
+    
+                return;
             }
-
+    
+            const existingRequest =
+                enrollmentRequests.get(userId);
+    
+            if (existingRequest) {
+                console.log(
+                    "Waiting for existing Vaulty enrollment request.",
+                );
+    
+                const enrollment =
+                    await existingRequest;
+    
+                setFactorId(enrollment.factorId);
+                setOtpauthUri(
+                    enrollment.otpauthUri,
+                );
+                setSecret(enrollment.secret);
+    
+                return;
+            }
+    
             /**
              * ---------------------------------------------------------
              * CASE 3:
-             * No existing factor remains.
-             *
-             * Create a brand-new TOTP enrollment.
+             * Start exactly ONE enrollment request.
              * ---------------------------------------------------------
              */
-            const { data, error: enrollError } = await supabase.auth.mfa.enroll(
-                {
-                    factorType: "totp",
-                    friendlyName: "Vaulty Authenticator",
-                },
+            const enrollmentPromise =
+                (async (): Promise<EnrollmentData> => {
+                    /**
+                     * Check factors again inside the locked
+                     * enrollment request.
+                     */
+                    const {
+                        data: currentFactors,
+                        error: currentFactorsError,
+                    } =
+                        await supabase.auth.mfa.listFactors();
+    
+                    if (currentFactorsError) {
+                        throw currentFactorsError;
+                    }
+    
+                    const currentTotp =
+                        currentFactors.totp ?? [];
+    
+                    /**
+                     * Another request/device may have created
+                     * a verified factor while we were waiting.
+                     */
+                    const verified =
+                        currentTotp.find(
+                            (factor) =>
+                                factor.status ===
+                                "verified",
+                        );
+    
+                    if (verified) {
+                        throw new Error(
+                            "A Vaulty authenticator was already verified for this account. Please sign in again.",
+                        );
+                    }
+    
+                    /**
+                     * Remove old incomplete factors.
+                     *
+                     * These are factors that were created but never
+                     * successfully verified.
+                     */
+                    const unverified =
+                        currentTotp.filter(
+                            (factor) =>
+                                factor.status !==
+                                "verified",
+                        );
+    
+                    for (const factor of unverified) {
+                        console.log(
+                            "Removing incomplete Vaulty factor:",
+                            factor.id,
+                        );
+    
+                        const {
+                            error:
+                                unenrollError,
+                        } =
+                            await supabase.auth.mfa.unenroll(
+                                {
+                                    factorId:
+                                        factor.id,
+                                },
+                            );
+    
+                        if (unenrollError) {
+                            throw new Error(
+                                "Vaulty found an unfinished authenticator setup and could not reset it. Please sign out and sign in again.",
+                            );
+                        }
+                    }
+    
+                    /**
+                     * -------------------------------------------------
+                     * CREATE NEW TOTP FACTOR
+                     * -------------------------------------------------
+                     */
+                    const {
+                        data,
+                        error: enrollError,
+                    } =
+                        await supabase.auth.mfa.enroll(
+                            {
+                                factorType: "totp",
+                                friendlyName:
+                                    "Vaulty Authenticator",
+                            },
+                        );
+    
+                    if (enrollError) {
+                        throw enrollError;
+                    }
+    
+                    if (
+                        !data?.id ||
+                        !data.totp?.uri ||
+                        !data.totp?.secret
+                    ) {
+                        throw new Error(
+                            "Supabase did not return a valid authenticator setup.",
+                        );
+                    }
+    
+                    const enrollment: EnrollmentData =
+                        {
+                            factorId: data.id,
+                            otpauthUri:
+                                data.totp.uri,
+                            secret: data.totp.secret,
+                        };
+    
+                    /**
+                     * Keep the enrollment temporarily in memory
+                     * so a development remount does not create
+                     * another factor.
+                     */
+                    enrollmentCache.set(
+                        userId,
+                        enrollment,
+                    );
+    
+                    console.log(
+                        "New Vaulty authenticator created:",
+                        enrollment.factorId,
+                    );
+    
+                    return enrollment;
+                })();
+    
+            /**
+             * Store the in-flight request BEFORE awaiting it.
+             *
+             * This is the important part that prevents duplicate
+             * enroll() calls.
+             */
+            enrollmentRequests.set(
+                userId,
+                enrollmentPromise,
             );
-
-            if (enrollError) {
-                throw enrollError;
-            }
-
-            if (!data?.id || !data.totp?.uri) {
-                throw new Error(
-                    "Supabase did not return a valid authenticator setup.",
+    
+            try {
+                const enrollment =
+                    await enrollmentPromise;
+    
+                setFactorId(
+                    enrollment.factorId,
                 );
+    
+                setOtpauthUri(
+                    enrollment.otpauthUri,
+                );
+    
+                setSecret(
+                    enrollment.secret,
+                );
+            } finally {
+                enrollmentRequests.delete(userId);
             }
-
-            console.log("New Vaulty authenticator created:", data.id);
-
-            setFactorId(data.id);
-            setOtpauthUri(data.totp.uri);
-            setSecret(data.totp.secret);
         } catch (error) {
-            console.error("Failed to set up MFA:", error);
-
+            console.error(
+                "Failed to set up MFA:",
+                error,
+            );
+    
             setError(
                 error instanceof Error
                     ? error.message
@@ -213,6 +419,21 @@ export default function SetupMFAScreen() {
             const stage = await refreshAuthState();
 
             if (stage === "ready") {
+                /**
+                 * The TOTP factor is now verified.
+                 * Remove the temporary enrollment secret from
+                 * Vaulty's in-memory cache.
+                 */
+                const {
+                    data: {
+                        user,
+                    },
+                } = await supabase.auth.getUser();
+            
+                if (user) {
+                    enrollmentCache.delete(user.id);
+                }
+            
                 router.replace("/(app)");
                 return;
             }
