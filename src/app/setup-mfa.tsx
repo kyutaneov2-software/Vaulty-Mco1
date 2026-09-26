@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import QRCode from "react-native-qrcode-svg";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
+
 import {
     ActivityIndicator,
     KeyboardAvoidingView,
@@ -17,8 +18,16 @@ import { AppButton } from "../components/AppButton";
 import SRVBackground from "../components/SRVBackground";
 import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
+import { generateRecoveryCodes } from "../services/recoveryService";
 import { supabase } from "../lib/supabase";
 import { authStyles as styles } from "../styles/auth.styles";
+
+/* =========================================================
+   TYPE: EnrollmentData
+
+   Stores the temporary TOTP enrollment information returned
+   by Supabase while the user is completing setup.
+========================================================= */
 
 type EnrollmentData = {
     factorId: string;
@@ -32,6 +41,7 @@ type EnrollmentData = {
    Keeps an unfinished enrollment temporarily in memory so
    a development remount does not create another factor.
 ========================================================= */
+
 const enrollmentCache = new Map<string, EnrollmentData>();
 
 /* =========================================================
@@ -40,40 +50,61 @@ const enrollmentCache = new Map<string, EnrollmentData>();
    Stores in-flight enrollment requests so duplicate
    useEffect executions reuse the same Supabase request.
 ========================================================= */
+
 const enrollmentRequests = new Map<string, Promise<EnrollmentData>>();
 
 /* =========================================================
    COMPONENT: SetupMFAScreen
 
    Guides the user through creating and verifying a
-   time-based one-time-password authenticator.
+   time-based one-time-password authenticator and then
+   generating one-time account recovery codes.
 ========================================================= */
+
 export default function SetupMFAScreen() {
     const { refreshAuthState, signOut } = useAuth();
 
     const [factorId, setFactorId] = useState("");
+
     const [otpauthUri, setOtpauthUri] = useState("");
+
     const [secret, setSecret] = useState("");
+
     const [code, setCode] = useState("");
+
     const [loading, setLoading] = useState(true);
+
     const [verifying, setVerifying] = useState(false);
+
+    const [mfaVerified, setMfaVerified] = useState(false);
+
     const [error, setError] = useState("");
 
+    /* =====================================================
+       EFFECT: INITIAL MFA SETUP
+
+       Checks the user's existing factors and safely starts
+       exactly one TOTP enrollment request.
+    ===================================================== */
+
     useEffect(() => {
-        /* =====================================================
+        /* =================================================
            FUNCTION: setupFactor
 
-           Checks the user's existing TOTP factors and safely
-           starts exactly one authenticator enrollment.
-        ===================================================== */
+           Checks the user's existing TOTP factors and
+           safely starts exactly one authenticator
+           enrollment.
+        ================================================= */
+
         const setupFactor = async () => {
             try {
                 setLoading(true);
                 setError("");
 
-                /* =================================================
+                /* =============================================
                    GET CURRENT AUTHENTICATED USER
-                ================================================= */
+                ============================================= */
+
                 const {
                     data: { user },
                     error: userError,
@@ -91,9 +122,10 @@ export default function SetupMFAScreen() {
 
                 const userId = user.id;
 
-                /* =================================================
+                /* =============================================
                    CHECK CURRENT MFA FACTORS
-                ================================================= */
+                ============================================= */
+
                 const { data: factors, error: listError } =
                     await supabase.auth.mfa.listFactors();
 
@@ -112,12 +144,12 @@ export default function SetupMFAScreen() {
                     })),
                 );
 
-                /* =================================================
+                /* =============================================
                    CASE 1: VERIFIED FACTOR ALREADY EXISTS
 
-                   The user should verify the existing authenticator
-                   instead of creating another one.
-                ================================================= */
+                   Do not create another authenticator.
+                ============================================= */
+
                 const verifiedFactor = totpFactors.find(
                     (factor) => factor.status === "verified",
                 );
@@ -128,14 +160,16 @@ export default function SetupMFAScreen() {
                     );
 
                     router.replace("/mfa-challenge");
+
                     return;
                 }
 
-                /* =================================================
+                /* =============================================
                    CASE 2: COMPLETED ENROLLMENT EXISTS IN MEMORY
 
-                   Reuse the enrollment created earlier.
-                ================================================= */
+                   Reuse the current enrollment.
+                ============================================= */
+
                 const cachedEnrollment = enrollmentCache.get(userId);
 
                 if (cachedEnrollment) {
@@ -144,18 +178,21 @@ export default function SetupMFAScreen() {
                     );
 
                     setFactorId(cachedEnrollment.factorId);
+
                     setOtpauthUri(cachedEnrollment.otpauthUri);
+
                     setSecret(cachedEnrollment.secret);
 
                     return;
                 }
 
-                /* =================================================
-                   CASE 3: ENROLLMENT REQUEST IS ALREADY RUNNING
+                /* =============================================
+                   CASE 3: ENROLLMENT REQUEST ALREADY RUNNING
 
-                   Reuse the existing Promise instead of calling
-                   Supabase MFA enroll twice.
-                ================================================= */
+                   Reuse the in-flight request rather than
+                   starting another Supabase enrollment call.
+                ============================================= */
+
                 const existingRequest = enrollmentRequests.get(userId);
 
                 if (existingRequest) {
@@ -166,27 +203,31 @@ export default function SetupMFAScreen() {
                     const enrollment = await existingRequest;
 
                     setFactorId(enrollment.factorId);
+
                     setOtpauthUri(enrollment.otpauthUri);
+
                     setSecret(enrollment.secret);
 
                     return;
                 }
 
-                /* =================================================
+                /* =============================================
                    CASE 4: CREATE ONE NEW ENROLLMENT REQUEST
 
-                   The request is stored in the map before it is
-                   awaited so duplicate executions can reuse it.
-                ================================================= */
+                   Store the Promise before awaiting it so
+                   duplicate executions can reuse the request.
+                ============================================= */
+
                 const enrollmentPromise =
                     (async (): Promise<EnrollmentData> => {
-                        /* =============================================
-                       CHECK FACTORS AGAIN
+                        /* =====================================
+                           SECOND FACTOR CHECK
 
-                       This second check protects against another
-                       request or device creating a factor while
-                       the first request is still running.
-                    ============================================= */
+                           Protects against another request or
+                           device creating a factor while this
+                           request is being prepared.
+                        ===================================== */
+
                         const {
                             data: currentFactors,
                             error: currentFactorsError,
@@ -198,9 +239,10 @@ export default function SetupMFAScreen() {
 
                         const currentTotp = currentFactors.totp ?? [];
 
-                        /* =============================================
-                       VERIFIED FACTOR FOUND DURING THE SECOND CHECK
-                    ============================================= */
+                        /* =====================================
+                           CHECK FOR NEWLY VERIFIED FACTOR
+                        ===================================== */
+
                         const verified = currentTotp.find(
                             (factor) => factor.status === "verified",
                         );
@@ -211,12 +253,13 @@ export default function SetupMFAScreen() {
                             );
                         }
 
-                        /* =============================================
-                       REMOVE INCOMPLETE FACTORS
+                        /* =====================================
+                           REMOVE INCOMPLETE FACTORS
 
-                       Unverified factors can remain after an
-                       interrupted setup, so clean them up first.
-                    ============================================= */
+                           Clears stale enrollments left by an
+                           interrupted setup.
+                        ===================================== */
+
                         const unverified = currentTotp.filter(
                             (factor) => factor.status !== "verified",
                         );
@@ -239,9 +282,10 @@ export default function SetupMFAScreen() {
                             }
                         }
 
-                        /* =============================================
-                       CREATE NEW TOTP FACTOR
-                    ============================================= */
+                        /* =====================================
+                           CREATE NEW TOTP FACTOR
+                        ===================================== */
+
                         const { data, error: enrollError } =
                             await supabase.auth.mfa.enroll({
                                 factorType: "totp",
@@ -264,16 +308,19 @@ export default function SetupMFAScreen() {
 
                         const enrollment: EnrollmentData = {
                             factorId: data.id,
+
                             otpauthUri: data.totp.uri,
+
                             secret: data.totp.secret,
                         };
 
-                        /* =============================================
-                       CACHE ENROLLMENT TEMPORARILY
+                        /* =====================================
+                           CACHE TEMPORARY ENROLLMENT
 
-                       This protects against development remounts
-                       generating another authenticator.
-                    ============================================= */
+                           Prevents development remounts from
+                           creating another TOTP factor.
+                        ===================================== */
+
                         enrollmentCache.set(userId, enrollment);
 
                         console.log(
@@ -284,16 +331,19 @@ export default function SetupMFAScreen() {
                         return enrollment;
                     })();
 
-                /* =================================================
-                   STORE REQUEST BEFORE AWAITING IT
-                ================================================= */
+                /* =============================================
+                   STORE REQUEST BEFORE AWAITING
+                ============================================= */
+
                 enrollmentRequests.set(userId, enrollmentPromise);
 
                 try {
                     const enrollment = await enrollmentPromise;
 
                     setFactorId(enrollment.factorId);
+
                     setOtpauthUri(enrollment.otpauthUri);
+
                     setSecret(enrollment.secret);
                 } finally {
                     enrollmentRequests.delete(userId);
@@ -317,93 +367,174 @@ export default function SetupMFAScreen() {
     /* =========================================================
        FUNCTION: handleCodeChange
 
-       Keeps only numeric characters and limits the code to
-       six digits.
+       Keeps only numeric characters and limits the input
+       to six digits.
     ========================================================= */
+
     const handleCodeChange = (value: string) => {
         setCode(value.replace(/\D/g, "").slice(0, 6));
+
         setError("");
+    };
+
+    /* =========================================================
+       FUNCTION: completeMFASetup
+
+       Generates the user's one-time recovery codes after
+       successful TOTP verification and navigates to the
+       recovery-code display screen.
+    ========================================================= */
+
+    const completeMFASetup = async () => {
+        /* =============================================
+               GENERATE RECOVERY CODES
+
+               The recovery service stores the raw codes
+               temporarily in memory while only their hashes
+               are stored server-side.
+            ============================================= */
+
+        await generateRecoveryCodes();
+
+        /* =============================================
+               REMOVE TEMPORARY TOTP ENROLLMENT CACHE
+            ============================================= */
+
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+            enrollmentCache.delete(user.id);
+        }
+
+        /* =============================================
+               SHOW RECOVERY CODES
+            ============================================= */
+
+        router.replace("/recovery-codes");
     };
 
     /* =========================================================
        FUNCTION: handleVerify
 
-       Creates an MFA challenge and verifies the six-digit
-       TOTP code entered by the user.
+       Verifies the six-digit TOTP code. Once the
+       authenticator is verified, generates recovery codes.
+       If recovery-code generation fails, the user can retry
+       without completing the TOTP verification again.
     ========================================================= */
-    const handleVerify = async () => {
-        const cleanCode = code.replace(/\D/g, "").slice(0, 6);
 
+    const handleVerify = async () => {
         setError("");
+
+        /* =============================================
+           VALIDATE FACTOR
+        ============================================= */
 
         if (!factorId) {
             setError("Authenticator setup is not ready yet.");
+
             return;
         }
 
+        /* =============================================
+           VALIDATE CODE
+        ============================================= */
+
+        const cleanCode = code.replace(/\D/g, "").slice(0, 6);
+
         if (!/^\d{6}$/.test(cleanCode)) {
             setError("Enter the 6-digit code from your authenticator app.");
+
             return;
         }
 
         try {
             setVerifying(true);
 
-            /* =================================================
-               CREATE MFA CHALLENGE
-            ================================================= */
-            const { data: challenge, error: challengeError } =
-                await supabase.auth.mfa.challenge({
-                    factorId,
-                });
+            /* =============================================
+               STEP 1: VERIFY TOTP
 
-            if (challengeError) {
-                throw challengeError;
-            }
+               Skip this step when MFA has already been
+               successfully verified and only recovery-code
+               generation needs to be retried.
+            ============================================= */
 
-            /* =================================================
-               VERIFY TOTP CODE
-            ================================================= */
-            const { error: verifyError } = await supabase.auth.mfa.verify({
-                factorId,
-                challengeId: challenge.id,
-                code: cleanCode,
-            });
+            if (!mfaVerified) {
+                /* =========================================
+                   CREATE MFA CHALLENGE
+                ========================================= */
 
-            if (verifyError) {
-                throw verifyError;
-            }
+                const { data: challenge, error: challengeError } =
+                    await supabase.auth.mfa.challenge({
+                        factorId,
+                    });
 
-            /* =================================================
-               REFRESH AUTH STATE
-
-               Successful verification should promote the
-               current session to the ready/AAL2 state.
-            ================================================= */
-            const stage = await refreshAuthState();
-
-            if (stage === "ready") {
-                /* =============================================
-                   REMOVE TEMPORARY ENROLLMENT DATA
-
-                   The TOTP secret should not remain cached after
-                   setup has completed successfully.
-                ============================================= */
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser();
-
-                if (user) {
-                    enrollmentCache.delete(user.id);
+                if (challengeError) {
+                    throw challengeError;
                 }
 
-                router.replace("/(app)");
-                return;
+                if (!challenge?.id) {
+                    throw new Error(
+                        "Vaulty could not create an MFA verification challenge.",
+                    );
+                }
+
+                /* =========================================
+                   VERIFY TOTP CODE
+                ========================================= */
+
+                const { error: verifyError } = await supabase.auth.mfa.verify({
+                    factorId,
+
+                    challengeId: challenge.id,
+
+                    code: cleanCode,
+                });
+
+                if (verifyError) {
+                    throw verifyError;
+                }
+
+                /* =========================================
+                   REFRESH AUTH STATE
+
+                   Successful verification should promote
+                   the session to the ready/AAL2 state.
+                ========================================= */
+
+                const stage = await refreshAuthState();
+
+                if (stage !== "ready") {
+                    setError(
+                        "Authenticator verified, but your session is not ready yet.",
+                    );
+
+                    return;
+                }
+
+                setMfaVerified(true);
             }
 
-            setError(
-                "Authenticator verified, but your session is not ready yet.",
-            );
+            /* =============================================
+               STEP 2: GENERATE RECOVERY CODES
+
+               This can be retried independently if the
+               server-side recovery-code generation fails.
+            ============================================= */
+
+            try {
+                await completeMFASetup();
+            } catch (recoveryError) {
+                console.error(
+                    "Recovery-code generation failed:",
+                    recoveryError,
+                );
+
+                setError(
+                    "Your authenticator was verified, but recovery codes could not be generated. Tap the button again to retry.",
+                );
+            }
         } catch (error) {
             console.error("MFA verification failed:", error);
 
@@ -422,6 +553,7 @@ export default function SetupMFAScreen() {
 
        Signs the user out of Vaulty from the MFA setup screen.
     ========================================================= */
+
     const handleSignOut = async () => {
         try {
             await signOut();
@@ -444,6 +576,7 @@ export default function SetupMFAScreen() {
                     {/* =================================================
                        TOP BAR
                     ================================================= */}
+
                     <View style={styles.setupMfaTopBar}>
                         <View>
                             <Text style={styles.setupMfaEyebrow}>
@@ -470,6 +603,7 @@ export default function SetupMFAScreen() {
                     {/* =================================================
                        HERO
                     ================================================= */}
+
                     <View style={styles.setupMfaHeroIcon}>
                         <Ionicons
                             name="shield-checkmark"
@@ -490,10 +624,12 @@ export default function SetupMFAScreen() {
                     {/* =================================================
                        SETUP CARD
                     ================================================= */}
+
                     <View style={styles.setupMfaCard}>
                         {/* =============================================
                            STEP 1
                         ============================================= */}
+
                         <View style={styles.setupMfaStepHeader}>
                             <View style={styles.setupMfaStepNumber}>
                                 <Text style={styles.setupMfaStepNumberText}>
@@ -516,6 +652,7 @@ export default function SetupMFAScreen() {
                         {/* =============================================
                            QR CODE
                         ============================================= */}
+
                         <View style={styles.setupMfaQrCard}>
                             {loading ? (
                                 <View style={styles.setupMfaQrLoading}>
@@ -547,6 +684,7 @@ export default function SetupMFAScreen() {
                         {/* =============================================
                            MANUAL SETUP
                         ============================================= */}
+
                         <View style={styles.setupMfaManualBox}>
                             <View style={styles.setupMfaManualHeader}>
                                 <View style={styles.setupMfaManualIcon}>
@@ -577,6 +715,7 @@ export default function SetupMFAScreen() {
                         {/* =============================================
                            STEP 2
                         ============================================= */}
+
                         <View style={styles.setupMfaStepHeader}>
                             <View style={styles.setupMfaStepNumber}>
                                 <Text style={styles.setupMfaStepNumberText}>
@@ -586,12 +725,15 @@ export default function SetupMFAScreen() {
 
                             <View style={styles.setupMfaStepContent}>
                                 <Text style={styles.setupMfaStepTitle}>
-                                    Verify the authenticator
+                                    {mfaVerified
+                                        ? "Authenticator verified"
+                                        : "Verify the authenticator"}
                                 </Text>
 
                                 <Text style={styles.setupMfaStepSubtitle}>
-                                    Enter the current 6-digit code from your
-                                    authenticator.
+                                    {mfaVerified
+                                        ? "Your authenticator is connected. Generate your recovery codes next."
+                                        : "Enter the current 6-digit code from your authenticator."}
                                 </Text>
                             </View>
                         </View>
@@ -599,22 +741,26 @@ export default function SetupMFAScreen() {
                         {/* =============================================
                            CODE INPUT
                         ============================================= */}
-                        <TextInput
-                            value={code}
-                            onChangeText={handleCodeChange}
-                            placeholder="000000"
-                            placeholderTextColor={colors.mutedDark}
-                            keyboardType="number-pad"
-                            maxLength={6}
-                            textAlign="center"
-                            autoCorrect={false}
-                            autoCapitalize="none"
-                            style={styles.setupMfaCodeInput}
-                        />
+
+                        {!mfaVerified ? (
+                            <TextInput
+                                value={code}
+                                onChangeText={handleCodeChange}
+                                placeholder="000000"
+                                placeholderTextColor={colors.mutedDark}
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                textAlign="center"
+                                autoCorrect={false}
+                                autoCapitalize="none"
+                                style={styles.setupMfaCodeInput}
+                            />
+                        ) : null}
 
                         {/* =============================================
                            ERROR
                         ============================================= */}
+
                         {error ? (
                             <View style={styles.setupMfaErrorBox}>
                                 <View style={styles.setupMfaErrorIcon}>
@@ -632,11 +778,16 @@ export default function SetupMFAScreen() {
                         ) : null}
 
                         {/* =============================================
-                           VERIFY BUTTON
+                           VERIFY / RECOVERY BUTTON
                         ============================================= */}
+
                         <View style={styles.setupMfaButtonWrapper}>
                             <AppButton
-                                title="Verify authenticator"
+                                title={
+                                    mfaVerified
+                                        ? "Generate recovery codes"
+                                        : "Verify authenticator"
+                                }
                                 onPress={handleVerify}
                                 loading={verifying}
                             />
@@ -646,6 +797,7 @@ export default function SetupMFAScreen() {
                     {/* =================================================
                        SECURITY NOTE
                     ================================================= */}
+
                     <View style={styles.setupMfaSecurityNote}>
                         <View style={styles.setupMfaSecurityIcon}>
                             <Ionicons

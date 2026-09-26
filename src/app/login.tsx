@@ -102,14 +102,13 @@ export default function LoginScreen() {
     };
 
     /* =========================================================
-       FUNCTION: handleForgotPassword
+    FUNCTION: handleForgotPassword
 
-       Temporary recovery entry point.
-       This will navigate to the Vaulty recovery flow
-       once recovery codes are implemented.
-    ========================================================= */
+    Opens the Vaulty password-recovery screen.
+ ========================================================= */
+
     const handleForgotPassword = () => {
-        setError("Account recovery will be added next.");
+        router.push("/recover-password");
     };
 
     /* =========================================================

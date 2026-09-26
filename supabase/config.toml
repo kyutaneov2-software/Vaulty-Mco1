@@ -424,3 +424,23 @@ entrypoint = "./functions/send-email/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-email/*.html" ]
+
+# =========================================================
+# FUNCTION: recover-password
+#
+# This function is intentionally callable without a user
+# JWT because it is used when the user has forgotten the
+# password.
+# =========================================================
+
+[functions.recover-password]
+verify_jwt = false
+
+# =========================================================
+# FUNCTION: generate-recovery-codes
+#
+# This function requires the user's authenticated JWT.
+# =========================================================
+
+[functions.generate-recovery-codes]
+verify_jwt = true
