@@ -18,6 +18,7 @@ import SRVBackground from "../components/SRVBackground";
 import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { authStyles as styles } from "../styles/auth.styles";
+import { useNotice } from "../context/NoticeContext";
 
 /* =========================================================
    FUNCTION: getRegisterErrorMessage
@@ -55,6 +56,7 @@ const getRegisterErrorMessage = (error: unknown) => {
 ========================================================= */
 export default function RegisterScreen() {
     const { signUp } = useAuth();
+    const { showSuccessNotice } = useNotice();
 
     const [name, setName] = useState("");
 
@@ -168,11 +170,12 @@ export default function RegisterScreen() {
     };
 
     /* =========================================================
-       FUNCTION: handleRegister
-
-       Validates registration data, creates the account,
-       and routes the new user into TOTP setup.
-    ========================================================= */
+    FUNCTION: handleRegister
+ 
+    Validates registration data, creates the account,
+    shows the registration success notice, and routes
+    the new user into the appropriate security stage.
+ ========================================================= */
     const handleRegister = async () => {
         setError("");
 
@@ -202,32 +205,49 @@ export default function RegisterScreen() {
             const cleanEmail = email.trim().toLowerCase();
 
             const nextStage = await signUp(
-                name,
+                name.trim(),
                 cleanEmail,
                 password,
                 rememberMe,
             );
 
-            /*
-             * New account needs TOTP setup.
-             */
+            /* =====================================================
+            REGISTRATION SUCCESS NOTICE
+ 
+            The global notice remains mounted while Expo Router
+            changes screens.
+         ===================================================== */
+            showSuccessNotice(
+                "Account created",
+                "Your Vaulty account was created successfully. Let's secure it with your authenticator.",
+            );
+
+            /* =====================================================
+            NEW ACCOUNT
+ 
+            New users continue to TOTP setup.
+         ===================================================== */
             if (nextStage === "setup") {
                 router.replace("/setup-mfa");
                 return;
             }
 
-            /*
-             * Safety fallback if an existing factor
-             * is found for the account.
-             */
+            /* =====================================================
+            EXISTING AUTHENTICATOR
+ 
+            Safety fallback if the account already has a
+            verified authenticator.
+         ===================================================== */
             if (nextStage === "challenge") {
                 router.replace("/mfa-challenge");
                 return;
             }
 
-            /*
-             * Already fully authenticated.
-             */
+            /* =====================================================
+            FULLY AUTHENTICATED
+ 
+            Safety fallback if the session is already ready.
+         ===================================================== */
             if (nextStage === "ready") {
                 router.replace("/(app)");
                 return;

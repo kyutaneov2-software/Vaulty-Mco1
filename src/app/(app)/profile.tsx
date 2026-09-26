@@ -21,6 +21,7 @@ import {
     uploadMyProfileAvatar,
 } from "../../services/profileService";
 import { profileStyles as styles } from "../../styles/profile.styles";
+import { useNotice } from "../../context/NoticeContext";
 
 /* =========================================================
    COMPONENT: ProfileScreen
@@ -31,6 +32,7 @@ import { profileStyles as styles } from "../../styles/profile.styles";
 ========================================================= */
 export default function ProfileScreen() {
     const { user, signOut } = useAuth();
+    const { showSuccessNotice } = useNotice();
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
@@ -160,8 +162,12 @@ export default function ProfileScreen() {
                 onPress: async () => {
                     try {
                         setLoggingOut(true);
-
                         await signOut();
+
+                        showSuccessNotice(
+                            "Logged out",
+                            "You have been securely logged out of your Vaulty account.",
+                        );
 
                         router.replace("/login");
                     } catch (error) {

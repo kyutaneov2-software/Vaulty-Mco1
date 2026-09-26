@@ -17,6 +17,7 @@ import SRVBackground from "../components/SRVBackground";
 import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { authStyles as styles } from "../styles/auth.styles";
+import { useNotice } from "../context/NoticeContext";
 
 /* =========================================================
    FUNCTION: getLoginErrorMessage
@@ -62,6 +63,7 @@ const getLoginErrorMessage = (error: unknown) => {
 ========================================================= */
 export default function LoginScreen() {
     const { signIn } = useAuth();
+    const { showSuccessNotice } = useNotice();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -151,8 +153,13 @@ export default function LoginScreen() {
             /*
              * Existing verified TOTP factor.
              */
-            if (nextStage === "challenge") {
-                router.replace("/mfa-challenge");
+            if (nextStage === "ready") {
+                showSuccessNotice(
+                    "Login successful",
+                    "Welcome back to Vaulty. Your account is ready.",
+                );
+
+                router.replace("/(app)");
                 return;
             }
 

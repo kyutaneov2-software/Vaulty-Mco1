@@ -17,6 +17,7 @@ import { colors } from "../constants/theme";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { authStyles as styles } from "../styles/auth.styles";
+import { useNotice } from "../context/NoticeContext";
 
 /* =========================================================
    FUNCTION: MFAChallengeScreen
@@ -26,6 +27,7 @@ import { authStyles as styles } from "../styles/auth.styles";
 ========================================================= */
 export default function MFAChallengeScreen() {
     const { refreshAuthState, signOut } = useAuth();
+    const { showSuccessNotice } = useNotice();
 
     const [factorId, setFactorId] = useState("");
 
@@ -148,8 +150,12 @@ export default function MFAChallengeScreen() {
             const stage = await refreshAuthState();
 
             if (stage === "ready") {
-                router.replace("/(app)");
+                showSuccessNotice(
+                    "Login successful",
+                    "Welcome back to Vaulty. Your identity has been verified.",
+                );
 
+                router.replace("/(app)");
                 return;
             }
 

@@ -21,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import { generateRecoveryCodes } from "../services/recoveryService";
 import { supabase } from "../lib/supabase";
 import { authStyles as styles } from "../styles/auth.styles";
+import { useNotice } from "../context/NoticeContext";
 
 /* =========================================================
    TYPE: EnrollmentData
@@ -63,6 +64,7 @@ const enrollmentRequests = new Map<string, Promise<EnrollmentData>>();
 
 export default function SetupMFAScreen() {
     const { refreshAuthState, signOut } = useAuth();
+    const { showSuccessNotice } = useNotice();
 
     const [factorId, setFactorId] = useState("");
 
@@ -549,14 +551,21 @@ export default function SetupMFAScreen() {
     };
 
     /* =========================================================
-       FUNCTION: handleSignOut
+    FUNCTION: handleSignOut
 
-       Signs the user out of Vaulty from the MFA setup screen.
-    ========================================================= */
-
+    Signs the user out of Vaulty from the MFA setup screen
+    and displays a global success notice.
+ ========================================================= */
     const handleSignOut = async () => {
         try {
             await signOut();
+
+            showSuccessNotice(
+                "Logged out",
+                "You have been securely logged out of your Vaulty account.",
+            );
+
+            router.replace("/login");
         } catch (error) {
             console.error("Failed to sign out:", error);
         }
