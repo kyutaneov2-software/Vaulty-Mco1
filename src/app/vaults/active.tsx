@@ -29,18 +29,11 @@ import { ActiveSkeleton } from "../../components/Skeletons";
 
 /* =========================================================
    TYPE: LockState
-
-   Extended state machine for the lock control. "locking"
-   and "unlocking" are transient — they render as spinners
-   on the button while the device acknowledges.
 ========================================================= */
 type LockState = "locked" | "unlocked" | "locking" | "unlocking";
 
 /* =========================================================
    FUNCTION: formatRemaining
-
-   Formats milliseconds as a human-readable countdown.
-   Switches to seconds precision under one hour.
 ========================================================= */
 function formatRemaining(ms: number): string {
     if (ms <= 0) return "Expired";
@@ -57,8 +50,6 @@ function formatRemaining(ms: number): string {
 
 /* =========================================================
    FUNCTION: formatTime
-
-   Formats an ISO timestamp as "HH:MM" for the activity log.
 ========================================================= */
 function formatTime(iso: string): string {
     const d = new Date(iso);
@@ -116,7 +107,7 @@ export default function ActiveRentalScreen() {
     }, [load]);
 
     /* ---------------------------------------------------------
-       Countdown ticker — updates remainingMs every second
+       Countdown ticker
     --------------------------------------------------------- */
     const rentalRef = useRef<Rental | null>(null);
     rentalRef.current = rental;
@@ -140,7 +131,7 @@ export default function ActiveRentalScreen() {
     }, [rental]);
 
     /* ---------------------------------------------------------
-       Toggle lock — mock device call, updates local state
+       Toggle lock
     --------------------------------------------------------- */
     const handleToggleLock = async () => {
         if (
@@ -159,8 +150,6 @@ export default function ActiveRentalScreen() {
         setLockState(nextState);
 
         try {
-            // Simulated MQTT round-trip. Replace with:
-            //   await publishUnlockCommand(vault.id)
             await new Promise((r) => setTimeout(r, 900));
 
             const event = await appendActivity(rental.id, eventType);
@@ -177,7 +166,7 @@ export default function ActiveRentalScreen() {
     };
 
     /* ---------------------------------------------------------
-       End rental — marks the rental cancelled, then backs out
+       End rental
     --------------------------------------------------------- */
     const handleEndRental = () => {
         if (!rental) return;
@@ -233,6 +222,22 @@ export default function ActiveRentalScreen() {
             new Date(rental.startedAt).getTime();
         return Math.max(0, Math.min(1, remainingMs / total));
     }, [rental, remainingMs]);
+
+    const stateColor = isExpired
+        ? colors.danger
+        : isExpiring
+          ? colors.warning
+          : isLocked
+            ? colors.primaryLight
+            : colors.success;
+
+    const stateTint = isExpired
+        ? colors.dangerSoft
+        : isExpiring
+          ? colors.warningSoft
+          : isLocked
+            ? colors.primaryFaint
+            : colors.successSoft;
 
     /* ---------------------------------------------------------
        Loading
@@ -323,40 +328,89 @@ export default function ActiveRentalScreen() {
                 <View
                     style={[
                         styles.heroCard,
-                        isExpired
-                            ? styles.heroCardExpired
-                            : isExpiring
-                              ? styles.heroCardExpiring
-                              : isLocked
-                                ? styles.heroCardLocked
-                                : styles.heroCardUnlocked,
+                        { borderColor: stateColor + "55" },
                     ]}
                 >
-                    <View
-                        style={[
-                            styles.heroIconWrap,
-                            {
-                                backgroundColor: isLocked
-                                    ? colors.primaryFaint
-                                    : colors.successSoft,
-                                borderColor: isLocked
-                                    ? colors.borderPurple
-                                    : "rgba(94,227,154,0.35)",
-                            },
-                        ]}
-                    >
-                        <Ionicons
-                            name={isLocked ? "lock-closed" : "lock-open"}
-                            size={48}
-                            color={
-                                isLocked ? colors.primaryLight : colors.success
-                            }
+                    {/* Vault image with ambient glow */}
+
+                    <View style={styles.heroImageArea}>
+                        <View
+                            style={[
+                                styles.heroImageGlow,
+                                { backgroundColor: stateTint },
+                            ]}
+                            pointerEvents="none"
                         />
+
+                        <Image
+                            source={vault.image}
+                            style={styles.heroImage}
+                            contentFit="contain"
+                            transition={300}
+                        />
+
+                        {/* Status pill overlaid on the image */}
+
+                        <View
+                            style={[
+                                styles.heroStatePill,
+                                {
+                                    backgroundColor: stateTint,
+                                    borderColor: stateColor + "88",
+                                },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.heroStateDot,
+                                    { backgroundColor: stateColor },
+                                ]}
+                            />
+                            <Text
+                                style={[
+                                    styles.heroStateText,
+                                    { color: stateColor },
+                                ]}
+                            >
+                                {isExpired
+                                    ? "EXPIRED"
+                                    : isLocked
+                                      ? "LOCKED"
+                                      : "UNLOCKED"}
+                            </Text>
+                        </View>
+
+                        {/* Lock badge — bottom-right of image */}
+
+                        <View
+                            style={[
+                                styles.heroLockBadge,
+                                {
+                                    backgroundColor: stateTint,
+                                    borderColor: stateColor + "AA",
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name={isLocked ? "lock-closed" : "lock-open"}
+                                size={22}
+                                color={stateColor}
+                            />
+                        </View>
                     </View>
 
-                    <Text style={styles.heroState}>
-                        {isLocked ? "LOCKED" : "UNLOCKED"}
-                    </Text>
+                    {/* Vault label */}
+
+                    <View style={styles.heroLabel}>
+                        <Text style={styles.heroLabelCode}>
+                            {rental.vaultCode}
+                        </Text>
+                        <Text style={styles.heroLabelMeta}>
+                            {vault.size} · {vault.location}
+                        </Text>
+                    </View>
+
+                    {/* Countdown */}
 
                     <View style={styles.heroCountdownWrap}>
                         <Text
@@ -375,7 +429,7 @@ export default function ActiveRentalScreen() {
                         </Text>
                     </View>
 
-                    {/* Progress bar */}
+                    {/* Progress */}
 
                     <View style={styles.progressTrack}>
                         <View
@@ -383,11 +437,7 @@ export default function ActiveRentalScreen() {
                                 styles.progressFill,
                                 {
                                     width: `${progress * 100}%`,
-                                    backgroundColor: isExpired
-                                        ? colors.danger
-                                        : isExpiring
-                                          ? colors.warning
-                                          : colors.primary,
+                                    backgroundColor: stateColor,
                                 },
                             ]}
                         />
@@ -594,4 +644,3 @@ export default function ActiveRentalScreen() {
         </SRVBackground>
     );
 }
-    

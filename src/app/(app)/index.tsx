@@ -2,7 +2,6 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -27,9 +26,6 @@ import { appStyles as styles } from "../../styles/app.styles";
 import { countUnread } from "../../services/notificationService";
 import { HomeSkeleton } from "../../components/Skeletons";
 
-/* =========================================================
-   FUNCTION: formatRemaining
-========================================================= */
 function formatRemaining(ms: number): string {
     if (ms <= 0) return "Expired";
 
@@ -55,7 +51,6 @@ export default function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState("");
     const [unreadCount, setUnreadCount] = useState(0);
-    
 
     /* ---------------------------------------------------------
        Loaders
@@ -392,13 +387,219 @@ export default function HomeScreen() {
                             pressed && styles.mapPreviewPressed,
                         ]}
                     >
+                        {/* Grid */}
+
+                        <View style={styles.mapGrid} pointerEvents="none">
+                            <View
+                                style={[
+                                    styles.mapGridLine,
+                                    { top: "18%", left: 0, right: 0 },
+                                ]}
+                            />
+                            <View
+                                style={[
+                                    styles.mapGridLine,
+                                    { top: "36%", left: 0, right: 0 },
+                                ]}
+                            />
+                            <View
+                                style={[
+                                    styles.mapGridLine,
+                                    { top: "72%", left: 0, right: 0 },
+                                ]}
+                            />
+                            <View
+                                style={[
+                                    styles.mapGridLine,
+                                    { top: "88%", left: 0, right: 0 },
+                                ]}
+                            />
+
+                            <View
+                                style={[
+                                    styles.mapGridLineV,
+                                    { left: "22%", top: 0, bottom: 0 },
+                                ]}
+                            />
+                            <View
+                                style={[
+                                    styles.mapGridLineV,
+                                    { left: "58%", top: 0, bottom: 0 },
+                                ]}
+                            />
+                            <View
+                                style={[
+                                    styles.mapGridLineV,
+                                    { left: "82%", top: 0, bottom: 0 },
+                                ]}
+                            />
+                        </View>
+
+                        {/* Roads */}
+
+                        <View
+                            style={[
+                                styles.mapRoad,
+                                { top: "52%", left: 0, right: 0, height: 3 },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapRoadV,
+                                { left: "40%", top: 0, bottom: 0, width: 3 },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View style={styles.mapRoadDiag} pointerEvents="none" />
+
+                        {/* Blocks */}
+
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "8%",
+                                    left: "6%",
+                                    width: "13%",
+                                    height: "10%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "8%",
+                                    left: "26%",
+                                    width: "11%",
+                                    height: "12%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlockDarker,
+                                {
+                                    top: "8%",
+                                    left: "64%",
+                                    width: "14%",
+                                    height: "10%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "8%",
+                                    left: "86%",
+                                    width: "10%",
+                                    height: "14%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlockDarker,
+                                {
+                                    top: "22%",
+                                    left: "6%",
+                                    width: "12%",
+                                    height: "12%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "22%",
+                                    left: "64%",
+                                    width: "14%",
+                                    height: "16%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "58%",
+                                    left: "6%",
+                                    width: "14%",
+                                    height: "12%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlockDarker,
+                                {
+                                    top: "58%",
+                                    left: "26%",
+                                    width: "10%",
+                                    height: "10%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "58%",
+                                    left: "62%",
+                                    width: "12%",
+                                    height: "12%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlockDarker,
+                                {
+                                    top: "80%",
+                                    left: "26%",
+                                    width: "16%",
+                                    height: "10%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+                        <View
+                            style={[
+                                styles.mapBlock,
+                                {
+                                    top: "80%",
+                                    left: "62%",
+                                    width: "12%",
+                                    height: "10%",
+                                },
+                            ]}
+                            pointerEvents="none"
+                        />
+
+                        <View style={styles.mapPark} pointerEvents="none" />
+                        <View style={styles.mapWater} pointerEvents="none" />
+
+                        {/* Pins */}
+
                         {nearby.map((v, i) => {
                             const positions = [
-                                { top: "30%", left: "28%" },
-                                { top: "55%", left: "62%" },
-                                { top: "22%", left: "68%" },
-                                { top: "68%", left: "34%" },
-                                { top: "42%", left: "48%" },
+                                { top: "28%", left: "30%" },
+                                { top: "62%", left: "68%" },
+                                { top: "42%", left: "50%" },
+                                { top: "76%", left: "28%" },
+                                { top: "22%", left: "72%" },
                             ];
                             const pos = positions[i % positions.length];
 
@@ -415,16 +616,25 @@ export default function HomeScreen() {
                                                 : colors.mutedDark,
                                         },
                                     ]}
+                                    pointerEvents="none"
                                 />
                             );
                         })}
 
-                        <View style={styles.mapBadge}>
+                        <View style={styles.mapBadge} pointerEvents="none">
                             <View style={styles.mapBadgeDot} />
                             <Text style={styles.mapBadgeText}>
                                 {onlineCount}{" "}
                                 {onlineCount === 1 ? "vault" : "vaults"} online
                             </Text>
+                        </View>
+
+                        <View style={styles.mapExpand} pointerEvents="none">
+                            <Ionicons
+                                name="expand-outline"
+                                size={14}
+                                color={colors.text}
+                            />
                         </View>
                     </Pressable>
 

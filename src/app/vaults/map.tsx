@@ -1,43 +1,40 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { WebView } from "react-native-webview";
 
 import SRVBackground from "../../components/SRVBackground";
 import { colors } from "../../constants/theme";
+import { buildMapHtml } from "../../services/mapHtml";
 import { getAvailableVaults, Vault } from "../../services/vaultService";
 import { vaultsStyles as styles } from "../../styles/vaults.styles";
 
 /* =========================================================
-   CONSTANT: PIN_POSITIONS
-
-   Pre-baked positions for up to 5 pins on the placeholder
-   grid. When the real map lands, these are replaced by
-   real lat/lng markers.
-
-   Positions are spread so pins never overlap and read
-   naturally as "scattered points" on the tile.
+   CONSTANT: NWSSU_CENTER
 ========================================================= */
-const PIN_POSITIONS: { top: string; left: string }[] = [
-    { top: "30%", left: "28%" },
-    { top: "55%", left: "62%" },
-    { top: "22%", left: "68%" },
-    { top: "68%", left: "34%" },
-    { top: "42%", left: "48%" },
-];
+const NWSSU_CENTER = {
+    latitude: 12.0675,
+    longitude: 124.5948,
+};
 
 export default function VaultMapScreen() {
+    const webViewRef = useRef<WebView>(null);
+
     const [vaults, setVaults] = useState<Vault[]>([]);
     const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
     const [loading, setLoading] = useState(true);
+    const [mapReady, setMapReady] = useState(false);
+    const [html, setHtml] = useState<string>("");
 
     /* ---------------------------------------------------------
-       Load vaults
+       Load vaults, then build the HTML once
     --------------------------------------------------------- */
     const load = useCallback(async () => {
         try {
             const data = await getAvailableVaults();
             setVaults(data);
+            setHtml(buildMapHtml(data, NWSSU_CENTER));
         } catch (error) {
             console.error("Failed to load vaults:", error);
         } finally {
@@ -50,12 +47,56 @@ export default function VaultMapScreen() {
     }, [load]);
 
     /* ---------------------------------------------------------
+       Handle messages from the WebView
+    --------------------------------------------------------- */
+    const handleMessage = (event: any) => {
+        try {
+            const msg = JSON.parse(event.nativeEvent.data);
+
+            if (msg.type === "map_ready") {
+                setMapReady(true);
+            } else if (msg.type === "marker_tap") {
+                const v = vaults.find((x) => x.id === msg.id);
+                if (v) setSelectedVault(v);
+            }
+        } catch (error) {
+            console.error("Map message parse failed:", error);
+        }
+    };
+
+    /* ---------------------------------------------------------
+       When a vault is selected from the strip, recenter the map
+    --------------------------------------------------------- */
+    const handleStripSelect = (vault: Vault) => {
+        setSelectedVault(vault);
+
+        webViewRef.current?.injectJavaScript(`
+            window.setCenter(${vault.latitude}, ${vault.longitude});
+            true;
+        `);
+    };
+
+    /* ---------------------------------------------------------
+       Clear selection → reset map view
+    --------------------------------------------------------- */
+    const handleClearSelection = () => {
+        setSelectedVault(null);
+        webViewRef.current?.injectJavaScript(`
+            window.resetView();
+            true;
+        `);
+    };
+
+    /* ---------------------------------------------------------
        Navigation
     --------------------------------------------------------- */
     const handleBack = () => router.back();
     const handleViewVault = (vault: Vault) =>
         router.push(`/vaults/${vault.id}`);
 
+    /* ---------------------------------------------------------
+       Derived
+    --------------------------------------------------------- */
     const onlineCount = vaults.filter((v) => v.online).length;
 
     /* ---------------------------------------------------------
@@ -100,69 +141,96 @@ export default function VaultMapScreen() {
             </View>
 
             {/* =================================================
-                MAP CONTAINER
+                MAP — WebView with embedded Leaflet
             ================================================= */}
 
             <View style={styles.mapContainer}>
-                <Pressable
-                    onPress={() => setSelectedVault(vaults[0] ?? null)}
-                    style={styles.mapArea}
-                >
-                    {/* Dynamic pins — one per vault */}
-
-                    {vaults.map((v, i) => {
-                        const pos = PIN_POSITIONS[i % PIN_POSITIONS.length];
-                        const isSelected = selectedVault?.id === v.id;
-
-                        return (
-                            <Pressable
-                                key={v.id}
-                                onPress={() => setSelectedVault(v)}
-                                hitSlop={10}
-                                style={[
-                                    styles.mapPin,
-                                    {
-                                        top: pos.top,
-                                        left: pos.left,
-                                        backgroundColor: v.online
-                                            ? colors.primary
-                                            : colors.mutedDark,
-                                        transform: [
-                                            { scale: isSelected ? 1.5 : 1 },
-                                        ],
-                                    },
-                                ]}
+                <WebView
+                    ref={webViewRef}
+                    source={{ html }}
+                    style={styles.mapView}
+                    originWhitelist={["*"]}
+                    javaScriptEnabled
+                    domStorageEnabled
+                    onMessage={handleMessage}
+                    onError={(e) =>
+                        console.error("WebView error:", e.nativeEvent)
+                    }
+                    androidLayerType="hardware"
+                    startInLoadingState
+                    renderLoading={() => (
+                        <View style={styles.mapLoader}>
+                            <ActivityIndicator
+                                size="large"
+                                color={colors.primary}
                             />
-                        );
-                    })}
+                        </View>
+                    )}
+                />
 
-                    {/* Badge */}
-
-                    <View style={styles.mapBadge}>
-                        <View style={styles.mapBadgeDot} />
-                        <Text style={styles.mapBadgeText}>
-                            {onlineCount}{" "}
-                            {onlineCount === 1 ? "vault" : "vaults"} online
+                {!mapReady ? (
+                    <View style={styles.mapLoaderOverlay}>
+                        <ActivityIndicator
+                            size="small"
+                            color={colors.primaryLight}
+                        />
+                        <Text style={styles.mapLoaderText}>
+                            Loading tiles...
                         </Text>
                     </View>
-                </Pressable>
-
-                {/* Banner */}
-
-                <View style={styles.permissionBanner}>
-                    <Ionicons
-                        name="construct-outline"
-                        size={14}
-                        color={colors.warning}
-                    />
-                    <Text style={styles.permissionText}>
-                        Interactive map coming in dev build
-                    </Text>
-                </View>
+                ) : null}
             </View>
 
             {/* =================================================
-                BOTTOM SHEET
+                VAULT SELECTOR STRIP
+            ================================================= */}
+
+            <View style={styles.vaultStrip}>
+                {vaults.map((v) => {
+                    const isSelected = selectedVault?.id === v.id;
+
+                    return (
+                        <Pressable
+                            key={v.id}
+                            onPress={() => handleStripSelect(v)}
+                            style={({ pressed }) => [
+                                styles.stripCard,
+                                isSelected && styles.stripCardActive,
+                                pressed && styles.stripCardPressed,
+                            ]}
+                        >
+                            <View style={styles.stripIcon}>
+                                <Ionicons
+                                    name="cube-outline"
+                                    size={16}
+                                    color={colors.primaryLight}
+                                />
+                            </View>
+
+                            <View style={styles.stripCopy}>
+                                <Text style={styles.stripCode}>{v.code}</Text>
+                                <Text style={styles.stripMeta}>
+                                    {v.size} · ₱{v.priceHour}/hr
+                                </Text>
+                            </View>
+
+                            <View
+                                style={[
+                                    styles.stripDot,
+                                    {
+                                        backgroundColor: v.online
+                                            ? colors.success
+                                            : colors.mutedDark,
+                                    },
+                                ]}
+                            />
+                        </Pressable>
+                    );
+                })}
+            </View>
+
+            {/* =================================================
+                SELECTED VAULT BOTTOM SHEET
             ================================================= */}
 
             {selectedVault ? (
@@ -247,7 +315,7 @@ export default function VaultMapScreen() {
                     </Pressable>
 
                     <Pressable
-                        onPress={() => setSelectedVault(null)}
+                        onPress={handleClearSelection}
                         hitSlop={8}
                         style={styles.sheetClose}
                     >

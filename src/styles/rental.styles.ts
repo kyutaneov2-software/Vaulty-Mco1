@@ -428,9 +428,7 @@ export const rentalStyles = StyleSheet.create({
     },
 
     heroCard: {
-        alignItems: "center",
-        paddingVertical: spacing.xl,
-        paddingHorizontal: spacing.lg,
+        padding: spacing.lg,
         borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
@@ -439,37 +437,92 @@ export const rentalStyles = StyleSheet.create({
         ...shadows.elevated,
     },
 
-    heroCardLocked: {
-        borderColor: colors.border,
+    /* ---------- Image area ---------- */
+
+    heroImageArea: {
+        height: 200,
+        borderRadius: radius.md,
+        backgroundColor: colors.surfaceElevated,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
     },
 
-    heroCardUnlocked: {
-        borderColor: "rgba(94,227,154,0.28)",
+    heroImageGlow: {
+        position: "absolute",
+        width: "80%",
+        height: "80%",
+        borderRadius: 999,
+        opacity: 0.5,
     },
 
-    heroCardExpiring: {
-        borderColor: "rgba(244,201,93,0.35)",
+    heroImage: {
+        width: "70%",
+        height: "70%",
     },
 
-    heroCardExpired: {
-        borderColor: "rgba(255,107,129,0.35)",
-    },
+    /* ---------- State pill (top-left of image) ---------- */
 
-    heroIconWrap: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+    heroStatePill: {
+        position: "absolute",
+        top: 12,
+        left: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: radius.pill,
         borderWidth: 1,
+    },
+
+    heroStateDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+
+    heroStateText: {
+        fontSize: 10,
+        fontWeight: "900",
+        letterSpacing: 1.2,
+    },
+
+    /* ---------- Lock badge (bottom-right of image) ---------- */
+
+    heroLockBadge: {
+        position: "absolute",
+        right: 12,
+        bottom: 12,
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        borderWidth: 1.5,
         alignItems: "center",
         justifyContent: "center",
     },
 
-    heroState: {
+    /* ---------- Vault label ---------- */
+
+    heroLabel: {
+        gap: 2,
+    },
+
+    heroLabelCode: {
         color: colors.textStrong,
         fontSize: 22,
         fontWeight: "900",
-        letterSpacing: 3,
+        letterSpacing: -0.5,
     },
+
+    heroLabelMeta: {
+        color: colors.muted,
+        fontSize: 13,
+        fontWeight: "600",
+    },
+
+    /* ---------- Countdown ---------- */
 
     heroCountdownWrap: {
         alignItems: "center",
@@ -479,7 +532,7 @@ export const rentalStyles = StyleSheet.create({
 
     heroCountdown: {
         color: colors.textStrong,
-        fontSize: 40,
+        fontSize: 42,
         fontWeight: "900",
         letterSpacing: -1,
     },
@@ -500,13 +553,14 @@ export const rentalStyles = StyleSheet.create({
         textTransform: "uppercase",
     },
 
+    /* ---------- Progress ---------- */
+
     progressTrack: {
         width: "100%",
         height: 5,
         borderRadius: 3,
         backgroundColor: colors.border,
         overflow: "hidden",
-        marginTop: spacing.md,
     },
 
     progressFill: {

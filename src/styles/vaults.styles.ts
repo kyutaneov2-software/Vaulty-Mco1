@@ -83,11 +83,7 @@ export const vaultsStyles = StyleSheet.create({
     },
 
     /* =====================================================
-       EMBEDDED MAP CARD (Home + Vaults browse preview)
-
-       This is the small placeholder card that opens the
-       full map. The actual MapView lives in a separate
-       section below.
+       EMBEDDED MAP CARD — decorative preview
     ===================================================== */
 
     mapArea: {
@@ -105,10 +101,91 @@ export const vaultsStyles = StyleSheet.create({
         opacity: 0.92,
     },
 
+    /* Decorative map layers */
+
+    mapGrid: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+
+    mapGridLine: {
+        position: "absolute",
+        height: 1,
+        backgroundColor: "rgba(255,255,255,0.035)",
+    },
+
+    mapGridLineV: {
+        position: "absolute",
+        width: 1,
+        backgroundColor: "rgba(255,255,255,0.035)",
+    },
+
+    mapRoad: {
+        position: "absolute",
+        backgroundColor: "rgba(139,92,246,0.10)",
+    },
+
+    mapRoadV: {
+        position: "absolute",
+        backgroundColor: "rgba(139,92,246,0.10)",
+    },
+
+    mapRoadDiag: {
+        position: "absolute",
+        top: "30%",
+        left: "-20%",
+        width: "140%",
+        height: 2,
+        backgroundColor: "rgba(139,92,246,0.07)",
+        transform: [{ rotate: "-22deg" }],
+    },
+
+    mapBlock: {
+        position: "absolute",
+        backgroundColor: "#15151A",
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.02)",
+    },
+
+    mapBlockDarker: {
+        position: "absolute",
+        backgroundColor: "#111116",
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.02)",
+    },
+
+    mapPark: {
+        position: "absolute",
+        top: "54%",
+        right: "6%",
+        width: "20%",
+        height: "22%",
+        backgroundColor: "rgba(94,227,154,0.06)",
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: "rgba(94,227,154,0.10)",
+    },
+
+    mapWater: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        width: "22%",
+        height: "14%",
+        backgroundColor: "rgba(79,140,255,0.08)",
+        borderTopRightRadius: 6,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderColor: "rgba(79,140,255,0.14)",
+    },
+
     mapPin: {
         position: "absolute",
-        top: "25%",
-        left: "25%",
         width: 12,
         height: 12,
         borderRadius: 6,
@@ -173,6 +250,34 @@ export const vaultsStyles = StyleSheet.create({
 
     mapView: {
         flex: 1,
+    },
+
+    mapLoader: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#0D0D10",
+    },
+
+    mapLoaderOverlay: {
+        position: "absolute",
+        top: 12,
+        left: 12,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 999,
+        backgroundColor: "rgba(0,0,0,0.80)",
+        borderWidth: 1,
+        borderColor: "#1C1C21",
+    },
+
+    mapLoaderText: {
+        color: "#A78BFA",
+        fontSize: 11,
+        fontWeight: "700",
     },
 
     permissionBanner: {
@@ -327,6 +432,76 @@ export const vaultsStyles = StyleSheet.create({
     },
 
     /* =====================================================
+       MAP SCREEN — vault selector strip
+    ===================================================== */
+
+    vaultStrip: {
+        flexDirection: "row",
+        gap: 8,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        backgroundColor: "rgba(0,0,0,0.80)",
+    },
+
+    stripCard: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        padding: 10,
+        borderRadius: radius.md,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+
+    stripCardActive: {
+        backgroundColor: colors.primaryFaint,
+        borderColor: colors.primary,
+    },
+
+    stripCardPressed: {
+        opacity: 0.85,
+    },
+
+    stripIcon: {
+        width: 30,
+        height: 30,
+        borderRadius: 9,
+        backgroundColor: colors.primaryFaint,
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    stripCopy: {
+        flex: 1,
+        gap: 1,
+    },
+
+    stripCode: {
+        color: colors.textStrong,
+        fontSize: 13,
+        fontWeight: "800",
+        letterSpacing: -0.2,
+    },
+
+    stripMeta: {
+        color: colors.mutedDark,
+        fontSize: 10,
+        fontWeight: "600",
+    },
+
+    stripDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+
+    /* =====================================================
        FILTERS
     ===================================================== */
 
@@ -345,7 +520,7 @@ export const vaultsStyles = StyleSheet.create({
     },
 
     filterPillActive: {
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderColor: colors.primary,
     },
 

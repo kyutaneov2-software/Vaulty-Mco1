@@ -1,13 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-    ActivityIndicator,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 
 import SRVBackground from "../../components/SRVBackground";
@@ -50,7 +44,9 @@ export default function VaultsBrowseScreen() {
     const visible =
         filter === "All" ? vaults : vaults.filter((v) => v.size === filter);
 
+    const onlineCount = vaults.filter((v) => v.online).length;
     const handleBack = () => router.back();
+    const handleMapPress = () => router.push("/vaults/map");
 
     if (loading) {
         return (
@@ -63,7 +59,7 @@ export default function VaultsBrowseScreen() {
     return (
         <SRVBackground>
             {/* =================================================
-                STICKY HEADER
+                HEADER
             ================================================= */}
 
             <View style={styles.header}>
@@ -106,37 +102,257 @@ export default function VaultsBrowseScreen() {
                 {/* ---------- MAP ---------- */}
 
                 <Pressable
+                    onPress={handleMapPress}
                     style={({ pressed }) => [
                         styles.mapArea,
                         pressed && styles.mapAreaPressed,
                     ]}
                 >
-                    <View style={styles.mapPin} />
+                    {/* Grid */}
+
+                    <View style={styles.mapGrid} pointerEvents="none">
+                        <View
+                            style={[
+                                styles.mapGridLine,
+                                { top: "18%", left: 0, right: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLine,
+                                { top: "36%", left: 0, right: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLine,
+                                { top: "72%", left: 0, right: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLine,
+                                { top: "88%", left: 0, right: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLineV,
+                                { left: "22%", top: 0, bottom: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLineV,
+                                { left: "58%", top: 0, bottom: 0 },
+                            ]}
+                        />
+                        <View
+                            style={[
+                                styles.mapGridLineV,
+                                { left: "82%", top: 0, bottom: 0 },
+                            ]}
+                        />
+                    </View>
+
+                    {/* Roads */}
+
                     <View
-                        style={[styles.mapPin, { top: "35%", left: "60%" }]}
+                        style={[
+                            styles.mapRoad,
+                            { top: "52%", left: 0, right: 0, height: 3 },
+                        ]}
+                        pointerEvents="none"
                     />
                     <View
-                        style={[styles.mapPin, { top: "65%", left: "30%" }]}
+                        style={[
+                            styles.mapRoadV,
+                            { left: "40%", top: 0, bottom: 0, width: 3 },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View style={styles.mapRoadDiag} pointerEvents="none" />
+
+                    {/* Blocks */}
+
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "8%",
+                                left: "6%",
+                                width: "13%",
+                                height: "10%",
+                            },
+                        ]}
+                        pointerEvents="none"
                     />
                     <View
-                        style={[styles.mapPin, { top: "55%", left: "75%" }]}
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "8%",
+                                left: "26%",
+                                width: "11%",
+                                height: "12%",
+                            },
+                        ]}
+                        pointerEvents="none"
                     />
                     <View
-                        style={[styles.mapPin, { top: "20%", left: "82%" }]}
+                        style={[
+                            styles.mapBlockDarker,
+                            {
+                                top: "8%",
+                                left: "64%",
+                                width: "14%",
+                                height: "10%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "8%",
+                                left: "86%",
+                                width: "10%",
+                                height: "14%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlockDarker,
+                            {
+                                top: "22%",
+                                left: "6%",
+                                width: "12%",
+                                height: "12%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "22%",
+                                left: "64%",
+                                width: "14%",
+                                height: "16%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "58%",
+                                left: "6%",
+                                width: "14%",
+                                height: "12%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlockDarker,
+                            {
+                                top: "58%",
+                                left: "26%",
+                                width: "10%",
+                                height: "10%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "58%",
+                                left: "62%",
+                                width: "12%",
+                                height: "12%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlockDarker,
+                            {
+                                top: "80%",
+                                left: "26%",
+                                width: "16%",
+                                height: "10%",
+                            },
+                        ]}
+                        pointerEvents="none"
+                    />
+                    <View
+                        style={[
+                            styles.mapBlock,
+                            {
+                                top: "80%",
+                                left: "62%",
+                                width: "12%",
+                                height: "10%",
+                            },
+                        ]}
+                        pointerEvents="none"
                     />
 
-                    <View style={styles.mapBadge}>
+                    <View style={styles.mapPark} pointerEvents="none" />
+                    <View style={styles.mapWater} pointerEvents="none" />
+
+                    {/* Pins */}
+
+                    {vaults.map((v, i) => {
+                        const positions = [
+                            { top: "28%", left: "30%" },
+                            { top: "62%", left: "68%" },
+                            { top: "42%", left: "50%" },
+                            { top: "76%", left: "28%" },
+                            { top: "22%", left: "72%" },
+                        ];
+                        const pos = positions[i % positions.length];
+
+                        return (
+                            <View
+                                key={v.id}
+                                style={[
+                                    styles.mapPin,
+                                    {
+                                        top: pos.top,
+                                        left: pos.left,
+                                        backgroundColor: v.online
+                                            ? colors.primary
+                                            : colors.mutedDark,
+                                    },
+                                ]}
+                                pointerEvents="none"
+                            />
+                        );
+                    })}
+
+                    <View style={styles.mapBadge} pointerEvents="none">
                         <View style={styles.mapBadgeDot} />
                         <Text style={styles.mapBadgeText}>
-                            {vaults.filter((v) => v.online).length} vaults
-                            online
+                            {onlineCount}{" "}
+                            {onlineCount === 1 ? "vault" : "vaults"} online
                         </Text>
                     </View>
 
-                    <View style={styles.mapExpand}>
+                    <View style={styles.mapExpand} pointerEvents="none">
                         <Ionicons
                             name="expand-outline"
-                            size={16}
+                            size={14}
                             color={colors.text}
                         />
                     </View>
@@ -206,8 +422,6 @@ export default function VaultsBrowseScreen() {
                                 pressed && styles.vaultRowPressed,
                             ]}
                         >
-                            {/* Image */}
-
                             <View style={styles.vaultImageWrap}>
                                 <Image
                                     source={vault.image}
@@ -216,8 +430,6 @@ export default function VaultsBrowseScreen() {
                                     transition={200}
                                 />
                             </View>
-
-                            {/* Body */}
 
                             <View style={styles.vaultBody}>
                                 <View style={styles.vaultTitleRow}>
@@ -248,7 +460,9 @@ export default function VaultsBrowseScreen() {
                                         color={colors.mutedDark}
                                     />
                                     <Text style={styles.vaultMetaText}>
-                                        {vault.distanceKm.toFixed(1)} km away
+                                        {vault.distanceKm > 0
+                                            ? `${vault.distanceKm.toFixed(1)} km away`
+                                            : vault.location}
                                     </Text>
                                 </View>
 
@@ -261,8 +475,6 @@ export default function VaultsBrowseScreen() {
                                     </Text>
                                 </View>
                             </View>
-
-                            {/* Chevron */}
 
                             <Ionicons
                                 name="chevron-forward"

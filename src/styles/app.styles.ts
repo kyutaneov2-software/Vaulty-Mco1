@@ -4,9 +4,6 @@ import { colors, radius, shadows, spacing } from "../constants/theme";
 export const appStyles = StyleSheet.create({
     /* =====================================================
        STICKY HEADER
-
-       Fixed to the top of the screen. Content scrolls
-       underneath it.
     ===================================================== */
 
     stickyHeader: {
@@ -211,12 +208,9 @@ export const appStyles = StyleSheet.create({
 
     mapPin: {
         position: "absolute",
-        top: "25%",
-        left: "25%",
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: colors.primary,
         shadowColor: colors.primary,
         shadowOpacity: 0.8,
         shadowRadius: 6,
@@ -514,8 +508,8 @@ export const appStyles = StyleSheet.create({
     },
 
     /* =====================================================
-    ACTIVE RENTAL CARD (Home hero)
- ===================================================== */
+       ACTIVE RENTAL CARD
+    ===================================================== */
 
     activeRentalCard: {
         padding: spacing.md,
@@ -603,8 +597,8 @@ export const appStyles = StyleSheet.create({
     },
 
     /* =====================================================
-    NEARBY — vertical list variant (used when ≤ 2 vaults)
- ===================================================== */
+       NEARBY — compact list
+    ===================================================== */
 
     nearbyList: {
         gap: 10,
@@ -664,6 +658,11 @@ export const appStyles = StyleSheet.create({
         gap: 2,
         paddingRight: 4,
     },
+
+    /* =====================================================
+       NOTIFICATION BELL BADGE
+    ===================================================== */
+
     bellBadge: {
         position: "absolute",
         top: 4,
@@ -684,5 +683,104 @@ export const appStyles = StyleSheet.create({
         fontSize: 9,
         fontWeight: "900",
         letterSpacing: -0.2,
+    },
+
+    /* =====================================================
+       MAP PREVIEW — decorative layers
+    ===================================================== */
+
+    mapGrid: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+
+    mapGridLine: {
+        position: "absolute",
+        height: 1,
+        backgroundColor: "rgba(255,255,255,0.035)",
+    },
+
+    mapGridLineV: {
+        position: "absolute",
+        width: 1,
+        backgroundColor: "rgba(255,255,255,0.035)",
+    },
+
+    mapRoad: {
+        position: "absolute",
+        backgroundColor: "rgba(139,92,246,0.10)",
+    },
+
+    mapRoadV: {
+        position: "absolute",
+        backgroundColor: "rgba(139,92,246,0.10)",
+    },
+
+    mapRoadDiag: {
+        position: "absolute",
+        top: "30%",
+        left: "-20%",
+        width: "140%",
+        height: 2,
+        backgroundColor: "rgba(139,92,246,0.07)",
+        transform: [{ rotate: "-22deg" }],
+    },
+
+    mapBlock: {
+        position: "absolute",
+        backgroundColor: "#15151A",
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.02)",
+    },
+
+    mapBlockDarker: {
+        position: "absolute",
+        backgroundColor: "#111116",
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.02)",
+    },
+
+    mapPark: {
+        position: "absolute",
+        top: "54%",
+        right: "6%",
+        width: "20%",
+        height: "22%",
+        backgroundColor: "rgba(94,227,154,0.06)",
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: "rgba(94,227,154,0.10)",
+    },
+
+    mapWater: {
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        width: "22%",
+        height: "14%",
+        backgroundColor: "rgba(79,140,255,0.08)",
+        borderTopRightRadius: 6,
+        borderTopWidth: 1,
+        borderRightWidth: 1,
+        borderColor: "rgba(79,140,255,0.14)",
+    },
+
+    mapExpand: {
+        position: "absolute",
+        top: 10,
+        right: 10,
+        width: 30,
+        height: 30,
+        borderRadius: 10,
+        backgroundColor: "rgba(0,0,0,0.75)",
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: "center",
+        justifyContent: "center",
     },
 });
