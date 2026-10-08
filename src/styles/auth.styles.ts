@@ -1,12 +1,7 @@
 import { StyleSheet } from "react-native";
-
-import { colors, radius, spacing } from "../constants/theme";
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
 export const authStyles = StyleSheet.create({
-    /* =================================================
-        SHARED AUTH CONTAINER
-    ================================================= */
-
     container: {
         flex: 1,
     },
@@ -54,19 +49,12 @@ export const authStyles = StyleSheet.create({
     },
 
     loginFormCard: {
-        backgroundColor: "#08070A",
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         borderRadius: 26,
         padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 28,
-        elevation: 10,
+        ...shadows.elevated,
     },
 
     loginCardHeader: {
@@ -82,7 +70,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
@@ -124,9 +112,9 @@ export const authStyles = StyleSheet.create({
         alignItems: "center",
         padding: 12,
         borderRadius: 17,
-        backgroundColor: colors.primaryFaint,
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
     },
 
     loginSecurityIcon: {
@@ -135,7 +123,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         marginRight: 10,
     },
 
@@ -164,7 +152,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 16,
         backgroundColor: colors.dangerSoft,
         borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.45)",
+        borderColor: "rgba(255,107,129,0.45)",
     },
 
     loginErrorIcon: {
@@ -173,7 +161,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(251,113,133,0.10)",
+        backgroundColor: "rgba(255,107,129,0.10)",
     },
 
     loginErrorText: {
@@ -221,13 +209,13 @@ export const authStyles = StyleSheet.create({
     },
 
     /* =================================================
-       REGISTER
+        REGISTER
     ================================================= */
 
     registerContent: {
         flexGrow: 1,
         paddingHorizontal: spacing.lg,
-        paddingTop: 46,
+        paddingTop: 56,
         paddingBottom: 44,
     },
 
@@ -267,16 +255,9 @@ export const authStyles = StyleSheet.create({
         overflow: "hidden",
         borderRadius: 28,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.36,
-        shadowRadius: 28,
-        elevation: 12,
+        ...shadows.elevated,
     },
 
     registerCardHighlight: {
@@ -285,7 +266,7 @@ export const authStyles = StyleSheet.create({
         left: 26,
         right: 26,
         height: 1,
-        backgroundColor: "rgba(167,139,250,0.32)",
+        backgroundColor: "rgba(255,255,255,0.06)",
     },
 
     registerSectionHeader: {
@@ -301,7 +282,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
@@ -333,7 +314,7 @@ export const authStyles = StyleSheet.create({
     ================================================= */
 
     registerPasswordPanel: {
-        backgroundColor: "rgba(23,19,32,0.82)",
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: 19,
@@ -444,9 +425,9 @@ export const authStyles = StyleSheet.create({
         marginTop: 20,
         padding: 12,
         borderRadius: 18,
-        backgroundColor: colors.primaryFaint,
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
     },
 
     registerPreferenceIcon: {
@@ -455,7 +436,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         marginRight: 10,
     },
 
@@ -487,9 +468,9 @@ export const authStyles = StyleSheet.create({
         marginTop: 14,
         padding: 12,
         borderRadius: 18,
-        backgroundColor: "rgba(32,20,53,0.72)",
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
     },
 
     registerMfaIcon: {
@@ -498,7 +479,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         marginRight: 10,
     },
 
@@ -507,7 +488,7 @@ export const authStyles = StyleSheet.create({
     },
 
     registerMfaTitle: {
-        color: colors.primaryLight,
+        color: colors.text,
         fontSize: 12,
         fontWeight: "800",
     },
@@ -532,7 +513,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 17,
         backgroundColor: colors.dangerSoft,
         borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.55)",
+        borderColor: "rgba(255,107,129,0.55)",
     },
 
     registerErrorIcon: {
@@ -541,7 +522,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(251,113,133,0.10)",
+        backgroundColor: "rgba(255,107,129,0.10)",
     },
 
     registerErrorText: {
@@ -612,8 +593,8 @@ export const authStyles = StyleSheet.create({
     },
 
     /* =================================================
-   MFA CHALLENGE
-================================================= */
+       MFA CHALLENGE
+    ================================================= */
 
     mfaContent: {
         flex: 1,
@@ -665,7 +646,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 22,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         marginBottom: 18,
@@ -688,19 +669,12 @@ export const authStyles = StyleSheet.create({
     },
 
     mfaCard: {
-        backgroundColor: "#08070A",
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         borderRadius: 26,
         padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 28,
-        elevation: 10,
+        ...shadows.elevated,
     },
 
     mfaCardHeader: {
@@ -716,7 +690,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
@@ -770,7 +744,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 16,
         backgroundColor: colors.dangerSoft,
         borderWidth: 1,
-        borderColor: "rgba(251,113,133,0.45)",
+        borderColor: "rgba(255,107,129,0.45)",
     },
 
     mfaErrorIcon: {
@@ -779,7 +753,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "rgba(251,113,133,0.10)",
+        backgroundColor: "rgba(255,107,129,0.10)",
     },
 
     mfaErrorText: {
@@ -824,8 +798,8 @@ export const authStyles = StyleSheet.create({
     },
 
     /* =========================================================
-    SETUP MFA SCREEN
- ========================================================= */
+       SETUP MFA SCREEN
+    ========================================================= */
 
     setupMfaContent: {
         flexGrow: 1,
@@ -872,7 +846,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 24,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         marginBottom: 18,
@@ -894,19 +868,12 @@ export const authStyles = StyleSheet.create({
     },
 
     setupMfaCard: {
-        backgroundColor: "#08070A",
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         borderRadius: 26,
         padding: spacing.md,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 18,
-        },
-        shadowOpacity: 0.4,
-        shadowRadius: 28,
-        elevation: 12,
+        ...shadows.elevated,
     },
 
     setupMfaStepHeader: {
@@ -921,7 +888,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
@@ -975,9 +942,9 @@ export const authStyles = StyleSheet.create({
         marginTop: 14,
         padding: 14,
         borderRadius: 17,
-        backgroundColor: colors.primaryFaint,
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
     },
 
     setupMfaManualHeader: {
@@ -992,13 +959,13 @@ export const authStyles = StyleSheet.create({
         borderRadius: 9,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
 
     setupMfaManualTitle: {
-        color: colors.primaryLight,
+        color: colors.text,
         fontSize: 12,
         fontWeight: "900",
     },
@@ -1084,7 +1051,7 @@ export const authStyles = StyleSheet.create({
         borderRadius: 9,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },

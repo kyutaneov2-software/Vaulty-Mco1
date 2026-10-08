@@ -1,33 +1,9 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing } from "../constants/theme";
-
-/* =========================================================
-   STYLESHEET: WALLET STYLES
-
-   Shared styling for the authenticated Vaulty Wallet
-   screen, including balance, development top-up,
-   errors, empty states, and transaction history.
-========================================================= */
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
 export const walletStyles = StyleSheet.create({
     /* =====================================================
-       PAGE
-    ===================================================== */
-
-    page: {
-        flex: 1,
-        backgroundColor: "transparent",
-    },
-
-    content: {
-        paddingHorizontal: spacing.lg,
-        paddingTop: 48,
-        paddingBottom: 40,
-        gap: spacing.lg,
-    },
-
-    /* =====================================================
-       LOADING
+       SHARED
     ===================================================== */
 
     loading: {
@@ -42,64 +18,94 @@ export const walletStyles = StyleSheet.create({
         fontSize: 14,
     },
 
+    page: {
+        flex: 1,
+        backgroundColor: "transparent",
+    },
+
+    content: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+        paddingBottom: 40,
+        gap: spacing.lg,
+    },
+
     /* =====================================================
        HEADER
     ===================================================== */
 
     header: {
-        gap: 6,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingTop: 56,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: 12,
+        backgroundColor: "rgba(0,0,0,0.80)",
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        zIndex: 10,
     },
 
-    eyebrow: {
+    headerIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    headerIconPressed: {
+        backgroundColor: colors.surfaceElevated,
+        transform: [{ scale: 0.96 }],
+    },
+
+    headerCopy: {
+        flex: 1,
+    },
+
+    headerEyebrow: {
         color: colors.primaryLight,
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: "900",
-        letterSpacing: 2.2,
+        letterSpacing: 2,
+        marginBottom: 2,
     },
 
-    title: {
+    headerTitle: {
         color: colors.textStrong,
-        fontSize: 32,
-        fontWeight: "900",
-    },
-
-    subtitle: {
-        color: colors.muted,
-        fontSize: 15,
-        lineHeight: 22,
+        fontSize: 20,
+        fontWeight: "800",
+        letterSpacing: -0.3,
     },
 
     /* =====================================================
-       BALANCE CARD
+       BALANCE
     ===================================================== */
 
     balanceCard: {
+        padding: spacing.lg,
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 14,
-        },
-        shadowOpacity: 0.24,
-        shadowRadius: 22,
-        elevation: 7,
+        borderColor: colors.border,
+        ...shadows.elevated,
     },
 
     balanceTop: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 12,
+        gap: 10,
     },
 
-    walletIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 15,
-        backgroundColor: colors.primarySoft,
+    walletBadge: {
+        width: 34,
+        height: 34,
+        borderRadius: 11,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         alignItems: "center",
@@ -109,100 +115,25 @@ export const walletStyles = StyleSheet.create({
     balanceLabel: {
         color: colors.muted,
         fontSize: 11,
-        fontWeight: "800",
-        letterSpacing: 1.4,
+        fontWeight: "900",
+        letterSpacing: 1.8,
     },
 
     balance: {
         color: colors.textStrong,
-        fontSize: 46,
-        lineHeight: 52,
+        fontSize: 54,
+        lineHeight: 60,
         fontWeight: "900",
-        marginTop: 24,
+        letterSpacing: -1.5,
+        marginTop: 20,
     },
 
-    pointsLabel: {
-        color: colors.primaryLight,
-        fontSize: 12,
-        fontWeight: "900",
-        letterSpacing: 3,
-        marginTop: 2,
-    },
-
-    /* =====================================================
-       TOP UP
-    ===================================================== */
-
-    topUpSection: {
-        gap: spacing.md,
-    },
-
-    sectionHeader: {
-        marginTop: spacing.sm,
-    },
-
-    sectionTitle: {
-        color: colors.textStrong,
-        fontSize: 20,
-        fontWeight: "900",
-    },
-
-    sectionSubtitle: {
-        color: colors.muted,
-        fontSize: 13,
-        marginTop: 3,
-    },
-
-    topUpGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 10,
-    },
-
-    topUpButton: {
-        width: "48%",
-        minHeight: 82,
-        borderRadius: radius.md,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 3,
-    },
-
-    topUpButtonActive: {
-        backgroundColor: colors.primary,
-        borderColor: colors.primaryLight,
-    },
-
-    topUpButtonPressed: {
-        opacity: 0.75,
-        transform: [
-            {
-                scale: 0.98,
-            },
-        ],
-    },
-
-    topUpAmount: {
-        color: colors.primaryLight,
-        fontSize: 22,
-        fontWeight: "900",
-    },
-
-    topUpPoints: {
-        color: colors.muted,
-        fontSize: 10,
-        fontWeight: "800",
-        letterSpacing: 1.5,
-    },
-
-    devNotice: {
+    balanceUnit: {
         color: colors.mutedDark,
         fontSize: 11,
-        lineHeight: 16,
-        textAlign: "center",
+        fontWeight: "900",
+        letterSpacing: 2.5,
+        marginTop: 4,
     },
 
     /* =====================================================
@@ -213,11 +144,11 @@ export const walletStyles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
+        padding: spacing.md,
+        borderRadius: radius.md,
         backgroundColor: colors.dangerSoft,
         borderWidth: 1,
         borderColor: "rgba(255,107,129,0.40)",
-        borderRadius: radius.md,
-        padding: spacing.md,
     },
 
     errorText: {
@@ -228,25 +159,235 @@ export const walletStyles = StyleSheet.create({
     },
 
     /* =====================================================
-       EMPTY STATE
+       SECTIONS
+    ===================================================== */
+
+    section: {
+        gap: spacing.sm,
+    },
+
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+
+    sectionTitle: {
+        color: colors.textStrong,
+        fontSize: 16,
+        fontWeight: "800",
+        letterSpacing: -0.2,
+    },
+
+    sectionHint: {
+        color: colors.mutedDark,
+        fontSize: 11,
+        fontWeight: "700",
+        letterSpacing: 1,
+        textTransform: "uppercase",
+    },
+
+    /* =====================================================
+       QUICK TOP UP
+
+       Horizontal scroll row. Buttons have fixed width so
+       additional amounts can be added without breaking the
+       layout — the row simply scrolls.
+    ===================================================== */
+
+    topUpGrid: {
+        flexDirection: "row",
+        gap: 8,
+        paddingRight: spacing.lg,
+    },
+
+    topUpButton: {
+        width: 88,
+        minHeight: 62,
+        borderRadius: radius.md,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+    },
+
+    topUpButtonActive: {
+        backgroundColor: colors.primaryFaint,
+        borderColor: colors.primary,
+    },
+
+    topUpButtonPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.98 }],
+    },
+
+    topUpAmount: {
+        color: colors.textStrong,
+        fontSize: 16,
+        fontWeight: "900",
+        letterSpacing: -0.3,
+    },
+
+    topUpUnit: {
+        color: colors.mutedDark,
+        fontSize: 9,
+        fontWeight: "900",
+        letterSpacing: 1.2,
+    },
+
+    devHint: {
+        color: colors.mutedDark,
+        fontSize: 10,
+        fontWeight: "600",
+        marginTop: 2,
+    },
+
+    /* =====================================================
+       PAY WITH CARD
+    ===================================================== */
+
+    payCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        padding: spacing.md,
+        borderRadius: radius.lg,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card,
+    },
+
+    payCardPressed: {
+        opacity: 0.88,
+        transform: [{ scale: 0.99 }],
+    },
+
+    payCardDisabled: {
+        opacity: 0.65,
+    },
+
+    payIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        backgroundColor: colors.primaryFaint,
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    payCopy: {
+        flex: 1,
+        gap: 2,
+    },
+
+    payTitle: {
+        color: colors.textStrong,
+        fontSize: 14,
+        fontWeight: "800",
+    },
+
+    payText: {
+        color: colors.muted,
+        fontSize: 11,
+        fontWeight: "500",
+    },
+
+    /* =====================================================
+       ACTIVITY
+    ===================================================== */
+
+    activityList: {
+        gap: 0,
+    },
+
+    dateHeader: {
+        color: colors.mutedDark,
+        fontSize: 10,
+        fontWeight: "900",
+        letterSpacing: 1.5,
+        marginBottom: 8,
+        marginLeft: 4,
+    },
+
+    dateHeaderSpaced: {
+        marginTop: spacing.md,
+    },
+
+    transactionsCard: {
+        borderRadius: radius.lg,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        overflow: "hidden",
+        ...shadows.card,
+    },
+
+    transaction: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 14,
+        paddingHorizontal: spacing.md,
+    },
+
+    transactionBorder: {
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+
+    transactionIcon: {
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: colors.surfaceElevated,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    transactionCopy: {
+        flex: 1,
+    },
+
+    transactionTitle: {
+        color: colors.text,
+        fontSize: 14,
+        fontWeight: "700",
+    },
+
+    transactionAmount: {
+        fontSize: 15,
+        fontWeight: "900",
+        letterSpacing: -0.3,
+    },
+
+    /* =====================================================
+       EMPTY
     ===================================================== */
 
     emptyCard: {
         alignItems: "center",
         justifyContent: "center",
+        paddingVertical: 42,
+        paddingHorizontal: 24,
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.lg,
-        paddingVertical: 42,
-        paddingHorizontal: 24,
+        ...shadows.card,
     },
 
     emptyIcon: {
-        width: 58,
-        height: 58,
-        borderRadius: 18,
-        backgroundColor: colors.primarySoft,
+        width: 54,
+        height: 54,
+        borderRadius: 17,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         alignItems: "center",
@@ -256,7 +397,7 @@ export const walletStyles = StyleSheet.create({
 
     emptyTitle: {
         color: colors.textStrong,
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: "800",
     },
 
@@ -267,134 +408,5 @@ export const walletStyles = StyleSheet.create({
         textAlign: "center",
         marginTop: 5,
         maxWidth: 280,
-    },
-
-    /* =====================================================
-       TRANSACTIONS
-    ===================================================== */
-
-    transactionsCard: {
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.lg,
-        paddingHorizontal: spacing.md,
-        overflow: "hidden",
-    },
-
-    transaction: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: spacing.md,
-        gap: 12,
-    },
-
-    transactionBorder: {
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-    },
-
-    transactionIcon: {
-        width: 42,
-        height: 42,
-        borderRadius: 13,
-        backgroundColor: colors.surfaceSoft,
-        borderWidth: 1,
-        borderColor: colors.border,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    transactionCopy: {
-        flex: 1,
-        gap: 4,
-    },
-
-    transactionTitle: {
-        color: colors.text,
-        fontSize: 14,
-        fontWeight: "700",
-    },
-
-    transactionDate: {
-        color: colors.mutedDark,
-        fontSize: 12,
-    },
-
-    transactionAmount: {
-        fontSize: 15,
-        fontWeight: "900",
-    },
-    /* =========================================================
-   PAYMONGO TEST CARD
-========================================================= */
-
-    payMongoTestCard: {
-        flexDirection: "row",
-
-        alignItems: "center",
-
-        backgroundColor: colors.surface,
-
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-
-        borderRadius: radius.lg,
-
-        padding: spacing.md,
-
-        marginTop: spacing.md,
-    },
-
-    payMongoTestCardPressed: {
-        opacity: 0.82,
-
-        transform: [
-            {
-                scale: 0.99,
-            },
-        ],
-    },
-
-    payMongoTestCardDisabled: {
-        opacity: 0.65,
-    },
-
-    payMongoTestIcon: {
-        width: 46,
-        height: 46,
-
-        borderRadius: 14,
-
-        alignItems: "center",
-        justifyContent: "center",
-
-        backgroundColor: colors.primaryFaint,
-
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-    },
-
-    payMongoTestCopy: {
-        flex: 1,
-
-        marginLeft: 12,
-        marginRight: 10,
-    },
-
-    payMongoTestTitle: {
-        color: colors.textStrong,
-
-        fontSize: 14,
-        fontWeight: "900",
-    },
-
-    payMongoTestText: {
-        color: colors.muted,
-
-        fontSize: 11,
-        lineHeight: 17,
-
-        marginTop: 3,
     },
 });

@@ -5,14 +5,14 @@ import { colors } from "../constants/theme";
    FUNCTION: getAvatarDimensions
 
    Generates the size-dependent styles used by SRVAvatar.
-   Keeping these calculations here prevents visual styling
-   logic from being duplicated inside the component.
+   borderRadius is size / 2 so every avatar renders as a
+   perfect circle regardless of size.
 ========================================================= */
 export const getAvatarDimensions = (size: number) => {
     return {
         width: size,
         height: size,
-        borderRadius: size / 2.6,
+        borderRadius: size / 2,
     };
 };
 
@@ -24,47 +24,31 @@ export const getAvatarDimensions = (size: number) => {
 ========================================================= */
 export const getAvatarInitialsStyle = (size: number) => {
     return {
-        fontSize: Math.max(12, size * 0.3),
+        fontSize: Math.max(12, size * 0.32),
     };
 };
 
 /* =========================================================
    STYLESHEET: AVATAR STYLES
-
-   Shared visual styles for the reusable Vaulty avatar
-   component.
 ========================================================= */
-
 export const avatarStyles = StyleSheet.create({
-    /* =====================================================
-       CONTAINER
-    ===================================================== */
-
     container: {
         overflow: "hidden",
-        backgroundColor: colors.surface,
+        backgroundColor: colors.surfaceElevated,
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
     },
-
-    /* =====================================================
-       IMAGE
-    ===================================================== */
 
     image: {
         width: "100%",
         height: "100%",
     },
 
-    /* =====================================================
-       FALLBACK
-    ===================================================== */
-
     fallback: {
         width: "100%",
         height: "100%",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -75,16 +59,12 @@ export const avatarStyles = StyleSheet.create({
         letterSpacing: 1,
     },
 
-    /* =====================================================
-       PURPLE RING
-    ===================================================== */
-
     ring: {
         position: "absolute",
         left: 0,
         top: 0,
-        borderWidth: 1.2,
-        borderColor: colors.primaryLight,
-        opacity: 0.75,
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+        opacity: 0.6,
     },
 });

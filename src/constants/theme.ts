@@ -1,79 +1,45 @@
 export const colors = {
-    /* =================================================
-       CORE BACKGROUND
-    ================================================= */
+    background: "#000000",
 
-    background: "#050407",
-
-    surface: "#0B090F",
-    surfaceElevated: "#111019",
-    surfaceSoft: "#171320",
-
-    /* =================================================
-       PURPLE SYSTEM
-    ================================================= */
+    surface: "#0B0B0E",
+    surfaceElevated: "#131317",
+    surfaceSoft: "#1A1A1F",
 
     primary: "#8B5CF6",
     primaryLight: "#A78BFA",
     primaryBright: "#B06CFF",
     primaryDark: "#5B21B6",
 
-    primarySoft: "#21133A",
-    primaryFaint: "#160D25",
+    primarySoft: "rgba(139,92,246,0.10)",
+    primaryFaint: "rgba(139,92,246,0.05)",
 
-    /* =================================================
-       GRADIENT COLORS
-    ================================================= */
+    gradientTop: "#0A0612",
+    gradientTopSoft: "#060609",
+    gradientMid: "#030305",
+    gradientBottom: "#000000",
 
-    gradientTop: "#5E20D8",
-    gradientTopSoft: "#4315A8",
-    gradientMid: "#24103F",
-    gradientBottom: "#08060B",
-
-    /* =================================================
-       TEXT
-    ================================================= */
-
-    text: "#F4F1F8",
+    text: "#F5F5F7",
     textStrong: "#FFFFFF",
 
-    muted: "#A59EAF",
-    mutedDark: "#706978",
+    muted: "#8E8E93",
+    mutedDark: "#5A5A5F",
 
-    /* =================================================
-       BORDERS
-    ================================================= */
-
-    border: "#24202B",
-    borderStrong: "#3A2B4E",
-    borderPurple: "#4B2A72",
-
-    /* =================================================
-       STATUS
-    ================================================= */
+    border: "#1C1C21",
+    borderStrong: "#2A2A31",
+    borderPurple: "rgba(139,92,246,0.35)",
 
     success: "#5EE39A",
-    successSoft: "#10291C",
+    successSoft: "rgba(94,227,154,0.10)",
 
     warning: "#F4C95D",
-    warningSoft: "#30260F",
+    warningSoft: "rgba(244,201,93,0.10)",
 
     danger: "#FF6B81",
-    dangerSoft: "#32131B",
-
-    /* =================================================
-       GOLD
-       
-       Used sparingly for premium/value accents.
-    ================================================= */
+    dangerSoft: "rgba(255,107,129,0.10)",
 
     gold: "#D4AF37",
     goldLight: "#F0D875",
-    goldSoft: "#2C240E",
-
-    /* =================================================
-       COMMON
-    ================================================= */
+    goldSoft: "rgba(212,175,55,0.10)",
 
     black: "#000000",
     white: "#FFFFFF",
@@ -96,43 +62,55 @@ export const radius = {
     pill: 999,
 };
 
+export const shadows = {
+    card: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        elevation: 4,
+    },
+
+    elevated: {
+        shadowColor: "#000000",
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.5,
+        shadowRadius: 24,
+        elevation: 10,
+    },
+
+    purple: {
+        shadowColor: "#8B5CF6",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+};
+
 export const gradients = {
     /* =================================================
        MAIN APP BACKGROUND
-       
-       Purple begins at the top and fades into black
-       toward the bottom.
+
+       Silver-to-black gradient. The top of the screen
+       uses a slate silver so the app reads visibly in
+       daylight. Fades through dark gray into pure black
+       by the bottom third.
     ================================================= */
 
     background: [
-        "#5E20D8",
-        "#4315A8",
-        "#24103F",
-        "#100A18",
-        "#050407",
+        "#2E3138",
+        "#1A1B1F",
+        "#0D0D10",
+        "#030304",
+        "#000000",
     ] as const,
-
-    /* =================================================
-       PRIMARY ACTION
-    ================================================= */
 
     primary: ["#6D28D9", "#8B5CF6"] as const,
 
-    /* =================================================
-       PURPLE GLOW
-    ================================================= */
-
-    purpleGlow: ["#8B5CF6", "#4C1D95", "#050407"] as const,
-
-    /* =================================================
-       PREMIUM ACCENT
-    ================================================= */
+    purpleGlow: ["#8B5CF6", "#4C1D95", "#000000"] as const,
 
     luxury: ["#8B5CF6", "#D4AF37"] as const,
 
-    /* =================================================
-       CARD
-    ================================================= */
-
-    card: ["#111019", "#09070D"] as const,
+    card: ["#131317", "#0B0B0E"] as const,
 };

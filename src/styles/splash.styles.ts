@@ -1,18 +1,7 @@
 import { StyleSheet } from "react-native";
 import { colors } from "../constants/theme";
 
-    /* =========================================================
-    STYLESHEET: SPLASH STYLES
-
-    Shared visual styles for the Vaulty application splash
-    screen.
-    ========================================================= */
-
 export const splashStyles = StyleSheet.create({
-    /* =====================================================
-    ROOT
-    ===================================================== */
-
     container: {
         flex: 1,
         backgroundColor: colors.background,
@@ -22,44 +11,7 @@ export const splashStyles = StyleSheet.create({
     },
 
     /* =====================================================
-        DECORATIVE GLOWS
-    ===================================================== */
-
-    glowTop: {
-        position: "absolute",
-        width: 390,
-        height: 390,
-        borderRadius: 195,
-        backgroundColor: "rgba(139,92,246,0.13)",
-        top: -225,
-        left: "50%",
-        marginLeft: -195,
-    },
-
-    glowCenter: {
-        position: "absolute",
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: "rgba(139,92,246,0.055)",
-        top: "50%",
-        left: "50%",
-        marginTop: -150,
-        marginLeft: -150,
-    },
-
-    glowBottom: {
-        position: "absolute",
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: "rgba(91,33,182,0.07)",
-        bottom: -210,
-        right: -110,
-    },
-
-    /* =====================================================
-        MAIN CONTENT
+       MAIN CONTENT
     ===================================================== */
 
     content: {
@@ -74,16 +26,8 @@ export const splashStyles = StyleSheet.create({
         justifyContent: "center",
     },
 
-    logoGlow: {
-        position: "absolute",
-        width: 215,
-        height: 215,
-        borderRadius: 108,
-        backgroundColor: "rgba(139,92,246,0.08)",
-    },
-
     /* =====================================================
-        LOADING AREA
+       LOADING AREA
     ===================================================== */
 
     loaderContainer: {
@@ -125,7 +69,7 @@ export const splashStyles = StyleSheet.create({
     },
 
     /* =====================================================
-        FOOTER
+       FOOTER
     ===================================================== */
 
     footer: {

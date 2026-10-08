@@ -1,19 +1,13 @@
 import { StyleSheet } from "react-native";
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
-import { colors, radius, spacing } from "../constants/theme";
-
-/* =========================================================
-   STYLES: noticeStyles
-
-   Shared styles for Vaulty's global success popup.
-========================================================= */
 export const noticeStyles = StyleSheet.create({
     overlay: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
         padding: spacing.lg,
-        backgroundColor: "rgba(0,0,0,0.72)",
+        backgroundColor: "rgba(0,0,0,0.80)",
     },
 
     card: {
@@ -22,17 +16,10 @@ export const noticeStyles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
         borderRadius: radius.xl,
         padding: spacing.xl,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 16,
-        },
-        shadowOpacity: 0.45,
-        shadowRadius: 28,
-        elevation: 18,
+        ...shadows.elevated,
     },
 
     iconWrapper: {

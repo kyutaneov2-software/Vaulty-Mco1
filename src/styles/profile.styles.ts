@@ -1,21 +1,10 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing } from "../constants/theme";
-
-/* =========================================================
-   STYLESHEET: PROFILE STYLES
-
-   Shared styling for the authenticated Vaulty Profile
-   screen and its reusable profile menu components.
-========================================================= */
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
 export const profileStyles = StyleSheet.create({
     /* =====================================================
-       MAIN SCREEN
+       SHARED
     ===================================================== */
-
-    screen: {
-        flex: 1,
-    },
 
     page: {
         flex: 1,
@@ -25,207 +14,207 @@ export const profileStyles = StyleSheet.create({
     content: {
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.lg,
-        paddingBottom: 48,
+        paddingBottom: 40,
         gap: spacing.lg,
     },
 
     /* =====================================================
-       STICKY HEADER
+       HEADER
     ===================================================== */
-
-    stickyHeader: {
-        backgroundColor: "rgba(5,4,7,0.62)",
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        paddingTop: 48,
-        paddingHorizontal: spacing.lg,
-        paddingBottom: 16,
-        zIndex: 20,
-        elevation: 8,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 10,
-    },
 
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        paddingTop: 56,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: 12,
+        backgroundColor: "rgba(0,0,0,0.80)",
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        zIndex: 10,
     },
 
     headerCopy: {
         flex: 1,
     },
 
-    eyebrow: {
+    headerEyebrow: {
         color: colors.primaryLight,
         fontSize: 10,
         fontWeight: "900",
-        letterSpacing: 2.2,
-        marginBottom: 4,
+        letterSpacing: 2,
+        marginBottom: 2,
     },
 
-    title: {
+    headerTitle: {
         color: colors.textStrong,
-        fontSize: 28,
-        fontWeight: "900",
+        fontSize: 20,
+        fontWeight: "800",
+        letterSpacing: -0.3,
     },
 
-    subtitle: {
-        color: colors.mutedDark,
-        fontSize: 12,
-        lineHeight: 18,
-        marginTop: 6,
-        paddingRight: 55,
-    },
-
-    headerLogoContainer: {
-        width: 52,
-        height: 52,
-        borderRadius: 16,
+    headerIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
         alignItems: "center",
         justifyContent: "center",
-        marginLeft: 12,
     },
 
-    headerLogo: {
-        width: 40,
-        height: 40,
+    headerIconPressed: {
+        backgroundColor: colors.surfaceElevated,
+        transform: [{ scale: 0.96 }],
     },
 
     /* =====================================================
-       PROFILE CARD
+       HERO CARD — horizontal layout, circular avatar
     ===================================================== */
 
-    profileCard: {
+    heroCard: {
+        flexDirection: "row",
         alignItems: "center",
+        gap: spacing.lg,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 12,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 20,
-        elevation: 6,
+        borderColor: colors.border,
+        ...shadows.elevated,
     },
 
-    avatarButton: {
+    avatarWrap: {
         position: "relative",
-        marginBottom: 14,
+        overflow: "visible",
     },
 
-    avatarButtonPressed: {
-        opacity: 0.8,
-        transform: [
-            {
-                scale: 0.98,
-            },
-        ],
+    avatarWrapPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.97 }],
     },
 
-    cameraButton: {
+    cameraBadge: {
         position: "absolute",
         right: -2,
         bottom: -2,
         width: 32,
         height: 32,
-        borderRadius: 12,
+        borderRadius: 16,
         backgroundColor: colors.primary,
-        borderWidth: 2,
+        borderWidth: 3,
         borderColor: colors.surface,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: colors.primary,
+        shadowOpacity: 0.45,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 4,
+    },
+
+    uploadOverlay: {
+        position: "absolute",
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.65)",
         alignItems: "center",
         justifyContent: "center",
     },
 
-    profileInfo: {
-        alignItems: "center",
-        gap: 5,
+    heroInfo: {
+        flex: 1,
+        gap: 3,
     },
 
-    name: {
+    heroName: {
         color: colors.textStrong,
-        fontSize: 20,
-        fontWeight: "900",
+        fontSize: 19,
+        fontWeight: "800",
+        letterSpacing: -0.3,
     },
 
-    email: {
+    heroEmail: {
         color: colors.muted,
         fontSize: 13,
     },
 
-    activeBadge: {
+    statusPill: {
         flexDirection: "row",
         alignItems: "center",
+        alignSelf: "flex-start",
         gap: 6,
-        backgroundColor: colors.successSoft,
-        paddingVertical: 6,
+        marginTop: spacing.xs,
+        paddingVertical: 4,
         paddingHorizontal: 10,
         borderRadius: radius.pill,
-        marginTop: 3,
+        backgroundColor: colors.successSoft,
         borderWidth: 1,
         borderColor: "rgba(94,227,154,0.18)",
     },
 
-    activeDot: {
-        width: 7,
-        height: 7,
-        borderRadius: 4,
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
         backgroundColor: colors.success,
     },
 
-    activeText: {
+    statusText: {
         color: colors.success,
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: "800",
+        letterSpacing: 0.3,
     },
 
-    changePhotoButton: {
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    statsCard: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        gap: 7,
-        marginTop: 17,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: radius.pill,
-        backgroundColor: colors.primarySoft,
+        borderRadius: radius.lg,
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
+        paddingVertical: spacing.md,
+        ...shadows.card,
     },
 
-    changePhotoPressed: {
-        opacity: 0.75,
+    statItem: {
+        flex: 1,
+        alignItems: "center",
+        gap: 4,
     },
 
-    changePhotoDisabled: {
-        opacity: 0.5,
+    statItemPressed: {
+        opacity: 0.7,
     },
 
-    changePhotoText: {
-        color: colors.primaryLight,
-        fontSize: 12,
-        fontWeight: "800",
+    statDivider: {
+        width: 1,
+        height: 34,
+        backgroundColor: colors.border,
     },
 
-    photoHint: {
+    statValue: {
+        color: colors.textStrong,
+        fontSize: 22,
+        fontWeight: "900",
+        letterSpacing: -0.5,
+    },
+
+    statLabel: {
         color: colors.mutedDark,
-        fontSize: 11,
-        lineHeight: 17,
-        textAlign: "center",
-        marginTop: -9,
-        paddingHorizontal: 20,
+        fontSize: 10,
+        fontWeight: "800",
+        letterSpacing: 1.4,
+        textTransform: "uppercase",
     },
 
     /* =====================================================
@@ -233,13 +222,15 @@ export const profileStyles = StyleSheet.create({
     ===================================================== */
 
     section: {
-        gap: 10,
+        gap: spacing.sm,
     },
 
-    sectionTitle: {
-        color: colors.textStrong,
-        fontSize: 18,
+    sectionEyebrow: {
+        color: colors.mutedDark,
+        fontSize: 10,
         fontWeight: "900",
+        letterSpacing: 2,
+        marginLeft: 4,
     },
 
     /* =====================================================
@@ -247,50 +238,42 @@ export const profileStyles = StyleSheet.create({
     ===================================================== */
 
     menuCard: {
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.lg,
         overflow: "hidden",
+        ...shadows.card,
     },
 
     menuItem: {
-        minHeight: 72,
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: spacing.md,
         gap: 12,
+        paddingVertical: 14,
+        paddingHorizontal: spacing.md,
     },
 
     menuPressed: {
-        backgroundColor: colors.surfaceSoft,
+        backgroundColor: colors.surfaceElevated,
     },
 
     menuIcon: {
-        width: 42,
-        height: 42,
-        borderRadius: 13,
-        backgroundColor: colors.primarySoft,
+        width: 38,
+        height: 38,
+        borderRadius: 12,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         alignItems: "center",
         justifyContent: "center",
     },
 
-    menuCopy: {
-        flex: 1,
-        gap: 3,
-    },
-
     menuTitle: {
+        flex: 1,
         color: colors.text,
         fontSize: 14,
-        fontWeight: "800",
-    },
-
-    menuSubtitle: {
-        color: colors.muted,
-        fontSize: 12,
+        fontWeight: "700",
     },
 
     divider: {
@@ -300,79 +283,33 @@ export const profileStyles = StyleSheet.create({
     },
 
     /* =====================================================
-       WALLET
-    ===================================================== */
-
-    walletCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.lg,
-        padding: spacing.md,
-        gap: 12,
-    },
-
-    walletCardPressed: {
-        backgroundColor: colors.surfaceSoft,
-        opacity: 0.92,
-    },
-
-    walletIcon: {
-        width: 46,
-        height: 46,
-        borderRadius: 14,
-        backgroundColor: colors.primarySoft,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    walletCopy: {
-        flex: 1,
-        gap: 3,
-    },
-
-    walletTitle: {
-        color: colors.text,
-        fontSize: 15,
-        fontWeight: "800",
-    },
-
-    walletSubtitle: {
-        color: colors.muted,
-        fontSize: 12,
-    },
-
-    /* =====================================================
        LOGOUT
     ===================================================== */
 
-    logoutButton: {
-        minHeight: 54,
+    logoutRow: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
-        backgroundColor: colors.dangerSoft,
-        borderWidth: 1,
-        borderColor: "rgba(255,107,129,0.40)",
+        minHeight: 52,
         borderRadius: radius.md,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
 
-    logoutPressed: {
-        opacity: 0.75,
+    logoutRowPressed: {
+        backgroundColor: colors.dangerSoft,
+        borderColor: "rgba(255,107,129,0.40)",
     },
 
-    logoutDisabled: {
+    logoutRowDisabled: {
         opacity: 0.5,
     },
 
     logoutText: {
         color: colors.danger,
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: "800",
     },
 
@@ -382,22 +319,14 @@ export const profileStyles = StyleSheet.create({
 
     footer: {
         alignItems: "center",
-        paddingTop: spacing.md,
-        paddingBottom: 20,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.md,
     },
 
-    version: {
-        color: colors.primaryLight,
-        textAlign: "center",
-        fontSize: 12,
-        fontWeight: "800",
-        letterSpacing: 1.5,
-    },
-
-    versionNumber: {
+    footerText: {
         color: colors.mutedDark,
-        textAlign: "center",
         fontSize: 11,
-        marginTop: 4,
+        fontWeight: "600",
+        letterSpacing: 0.5,
     },
 });

@@ -1,18 +1,7 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing } from "../constants/theme";
-
-/* =========================================================
-   STYLESHEET: RECOVERY STYLES
-
-   Shared visual styles for the Vaulty password-recovery
-   and recovery-code screens.
-========================================================= */
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
 export const recoveryStyles = StyleSheet.create({
-    /* =====================================================
-       SCREEN
-    ===================================================== */
-
     container: {
         flex: 1,
     },
@@ -70,7 +59,7 @@ export const recoveryStyles = StyleSheet.create({
         borderRadius: 22,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         marginBottom: 18,
@@ -96,11 +85,12 @@ export const recoveryStyles = StyleSheet.create({
     ===================================================== */
 
     card: {
-        backgroundColor: "#08070A",
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         borderRadius: radius.lg,
         padding: spacing.md,
+        ...shadows.card,
     },
 
     cardHeader: {
@@ -116,7 +106,7 @@ export const recoveryStyles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
     },
@@ -153,9 +143,9 @@ export const recoveryStyles = StyleSheet.create({
         gap: 9,
         padding: 12,
         borderRadius: 16,
-        backgroundColor: colors.primaryFaint,
+        backgroundColor: colors.surfaceElevated,
         borderWidth: 1,
-        borderColor: colors.borderPurple,
+        borderColor: colors.border,
     },
 
     infoIcon: {
@@ -164,7 +154,7 @@ export const recoveryStyles = StyleSheet.create({
         borderRadius: 10,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: colors.primarySoft,
+        backgroundColor: colors.primaryFaint,
     },
 
     infoContent: {
@@ -172,7 +162,7 @@ export const recoveryStyles = StyleSheet.create({
     },
 
     infoTitle: {
-        color: colors.primaryLight,
+        color: colors.text,
         fontSize: 12,
         fontWeight: "800",
     },
@@ -225,11 +215,12 @@ export const recoveryStyles = StyleSheet.create({
     ===================================================== */
 
     codesCard: {
-        backgroundColor: "#08070A",
+        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.borderStrong,
+        borderColor: colors.border,
         borderRadius: radius.lg,
         padding: spacing.md,
+        ...shadows.card,
     },
 
     codesGrid: {

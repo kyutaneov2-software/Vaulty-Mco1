@@ -1,21 +1,118 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing } from "../constants/theme";
-
-/* =========================================================
-   STYLESHEET: APP STYLES
-
-   Shared styles for the main authenticated Vaulty
-   application pages, starting with the Home screen.
-========================================================= */
+import { colors, radius, shadows, spacing } from "../constants/theme";
 
 export const appStyles = StyleSheet.create({
     /* =====================================================
-       MAIN SCREEN
+       STICKY HEADER
+
+       Fixed to the top of the screen. Content scrolls
+       underneath it.
     ===================================================== */
 
-    screen: {
-        flex: 1,
+    stickyHeader: {
+        paddingTop: 56,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: 12,
+        backgroundColor: "rgba(0,0,0,0.80)",
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        zIndex: 10,
     },
+
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+
+    headerBrand: {
+        flexDirection: "row",
+        alignItems: "center",
+        flex: 1,
+        gap: 12,
+    },
+
+    headerBrandPressed: {
+        opacity: 0.8,
+    },
+
+    headerText: {
+        flex: 1,
+        gap: 1,
+    },
+
+    greeting: {
+        color: colors.muted,
+        fontSize: 13,
+        fontWeight: "500",
+    },
+
+    name: {
+        color: colors.textStrong,
+        fontSize: 21,
+        fontWeight: "800",
+        letterSpacing: -0.3,
+    },
+
+    iconButton: {
+        width: 42,
+        height: 42,
+        borderRadius: 14,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    iconButtonPressed: {
+        backgroundColor: colors.surfaceElevated,
+        transform: [{ scale: 0.96 }],
+    },
+
+    /* =====================================================
+       QUICK PILLS
+    ===================================================== */
+
+    pillRow: {
+        flexDirection: "row",
+        gap: 8,
+        marginTop: 12,
+    },
+
+    walletPill: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+
+    pillPressed: {
+        backgroundColor: colors.surfaceElevated,
+        opacity: 0.9,
+    },
+
+    walletPillValue: {
+        color: colors.textStrong,
+        fontSize: 14,
+        fontWeight: "800",
+        letterSpacing: -0.2,
+    },
+
+    walletPillUnit: {
+        color: colors.mutedDark,
+        fontSize: 11,
+        fontWeight: "600",
+    },
+
+    /* =====================================================
+       SCROLL CONTENT
+    ===================================================== */
 
     page: {
         flex: 1,
@@ -25,94 +122,8 @@ export const appStyles = StyleSheet.create({
     content: {
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.lg,
-        paddingBottom: 48,
+        paddingBottom: 40,
         gap: spacing.lg,
-    },
-
-    /* =====================================================
-       STICKY HEADER
-    ===================================================== */
-
-    stickyHeader: {
-        backgroundColor: "rgba(5,4,7,0.62)",
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        paddingTop: 48,
-        paddingHorizontal: spacing.lg,
-        paddingBottom: 16,
-        zIndex: 20,
-        elevation: 8,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 10,
-    },
-
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-
-    headerBrand: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
-
-    headerBrandPressed: {
-        opacity: 0.8,
-    },
-
-    headerText: {
-        flex: 1,
-        marginLeft: 12,
-    },
-
-    greeting: {
-        color: colors.muted,
-        fontSize: 17,
-        fontWeight: "600",
-        lineHeight: 22,
-    },
-
-    name: {
-        color: colors.textStrong,
-        fontSize: 27,
-        fontWeight: "900",
-        lineHeight: 31,
-    },
-
-    headerSubtitle: {
-        color: colors.mutedDark,
-        fontSize: 12,
-        lineHeight: 18,
-        marginTop: 7,
-        marginLeft: 64,
-    },
-
-    notificationButton: {
-        width: 46,
-        height: 46,
-        borderRadius: 15,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: 10,
-    },
-
-    notificationPressed: {
-        backgroundColor: colors.surfaceSoft,
-        transform: [
-            {
-                scale: 0.96,
-            },
-        ],
     },
 
     /* =====================================================
@@ -129,99 +140,6 @@ export const appStyles = StyleSheet.create({
     loadingText: {
         color: colors.muted,
         fontSize: 14,
-    },
-
-    /* =====================================================
-       WALLET CARD
-    ===================================================== */
-
-    walletCard: {
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        borderRadius: radius.lg,
-        padding: spacing.lg,
-        shadowColor: colors.black,
-        shadowOffset: {
-            width: 0,
-            height: 12,
-        },
-        shadowOpacity: 0.24,
-        shadowRadius: 20,
-        elevation: 6,
-    },
-
-    walletCardPressed: {
-        opacity: 0.82,
-        transform: [
-            {
-                scale: 0.99,
-            },
-        ],
-    },
-
-    walletTop: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-    },
-
-    walletLabel: {
-        color: colors.primaryLight,
-        fontSize: 11,
-        fontWeight: "900",
-        letterSpacing: 2,
-    },
-
-    walletDescription: {
-        color: colors.muted,
-        fontSize: 12,
-        marginTop: 3,
-    },
-
-    walletIcon: {
-        width: 46,
-        height: 46,
-        borderRadius: 14,
-        backgroundColor: colors.primarySoft,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    walletBalance: {
-        color: colors.textStrong,
-        fontSize: 48,
-        lineHeight: 54,
-        fontWeight: "900",
-        marginTop: 24,
-    },
-
-    walletBottom: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginTop: 2,
-    },
-
-    walletPoints: {
-        color: colors.primaryLight,
-        fontSize: 11,
-        fontWeight: "900",
-        letterSpacing: 2.5,
-    },
-
-    walletLink: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 5,
-    },
-
-    walletLinkText: {
-        color: colors.primaryLight,
-        fontSize: 12,
-        fontWeight: "800",
     },
 
     /* =====================================================
@@ -247,226 +165,335 @@ export const appStyles = StyleSheet.create({
     },
 
     /* =====================================================
-       SECTIONS
+       FIND A VAULT — HERO
     ===================================================== */
 
-    section: {
-        gap: 11,
+    heroCard: {
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.lg,
+        padding: spacing.md,
+        ...shadows.card,
     },
+
+    heroHeader: {
+        marginBottom: spacing.md,
+    },
+
+    heroEyebrow: {
+        color: colors.primaryLight,
+        fontSize: 10,
+        fontWeight: "900",
+        letterSpacing: 2,
+        marginBottom: 4,
+    },
+
+    heroSubtitle: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: "700",
+    },
+
+    mapPreview: {
+        height: 180,
+        borderRadius: radius.md,
+        backgroundColor: "#0D0D10",
+        borderWidth: 1,
+        borderColor: colors.border,
+        overflow: "hidden",
+        position: "relative",
+    },
+
+    mapPreviewPressed: {
+        opacity: 0.9,
+    },
+
+    mapPin: {
+        position: "absolute",
+        top: "25%",
+        left: "25%",
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: colors.primary,
+        shadowColor: colors.primary,
+        shadowOpacity: 0.8,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 0 },
+        elevation: 4,
+    },
+
+    mapBadge: {
+        position: "absolute",
+        bottom: 10,
+        left: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: radius.pill,
+        backgroundColor: "rgba(0,0,0,0.75)",
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+
+    mapBadgeDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: colors.success,
+    },
+
+    mapBadgeText: {
+        color: colors.text,
+        fontSize: 11,
+        fontWeight: "700",
+    },
+
+    heroButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        marginTop: spacing.md,
+        minHeight: 46,
+        borderRadius: radius.md,
+        backgroundColor: colors.primary,
+    },
+
+    heroButtonPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.99 }],
+    },
+
+    heroButtonText: {
+        color: colors.white,
+        fontSize: 14,
+        fontWeight: "800",
+    },
+
+    /* =====================================================
+       SECTION HEADERS
+    ===================================================== */
 
     sectionHeader: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-    },
-
-    sectionTitleRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        flex: 1,
-    },
-
-    sectionTitleCopy: {
-        flex: 1,
-    },
-
-    sectionLogo: {
-        width: 42,
-        height: 42,
-        borderRadius: 13,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 11,
+        marginBottom: spacing.sm,
     },
 
     sectionTitle: {
         color: colors.textStrong,
-        fontSize: 19,
-        fontWeight: "900",
+        fontSize: 18,
+        fontWeight: "800",
+        letterSpacing: -0.3,
     },
 
-    sectionSubtitle: {
-        color: colors.muted,
+    seeAll: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 2,
+    },
+
+    seeAllText: {
+        color: colors.primaryLight,
         fontSize: 13,
-        marginTop: 3,
+        fontWeight: "700",
     },
 
     /* =====================================================
-       FIND A VAULT
+       VAULT CARDS
     ===================================================== */
 
-    findVaultCard: {
-        flexDirection: "row",
-        alignItems: "center",
+    vaultScroll: {
+        gap: 10,
+        paddingRight: spacing.lg,
+    },
+
+    vaultCard: {
+        width: 160,
+        padding: 10,
+        borderRadius: radius.md,
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.lg,
-        padding: spacing.md,
-        gap: 13,
+        ...shadows.card,
     },
 
-    findVaultPressed: {
-        backgroundColor: colors.surfaceSoft,
+    vaultCardPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.98 }],
     },
 
-    findVaultIcon: {
-        width: 54,
-        height: 54,
-        borderRadius: 17,
-        backgroundColor: colors.primarySoft,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
+    vaultImageWrap: {
+        width: "100%",
+        height: 100,
+        borderRadius: 12,
+        backgroundColor: colors.surfaceElevated,
+        overflow: "hidden",
+        position: "relative",
+        marginBottom: 10,
     },
 
-    findVaultCopy: {
-        flex: 1,
-        gap: 4,
+    vaultImage: {
+        width: "100%",
+        height: "100%",
     },
 
-    findVaultTitle: {
-        color: colors.text,
+    vaultDot: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: colors.surface,
+    },
+
+    vaultCode: {
+        color: colors.textStrong,
         fontSize: 15,
         fontWeight: "800",
+        letterSpacing: -0.2,
     },
 
-    findVaultText: {
+    vaultSize: {
         color: colors.muted,
         fontSize: 12,
-        lineHeight: 18,
-    },
-
-    comingSoonBadge: {
-        alignSelf: "flex-start",
-        backgroundColor: colors.primarySoft,
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: radius.pill,
+        fontWeight: "600",
         marginTop: 2,
     },
 
-    comingSoonText: {
-        color: colors.primaryLight,
-        fontSize: 9,
+    vaultMeta: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        marginTop: 6,
+    },
+
+    vaultMetaText: {
+        color: colors.mutedDark,
+        fontSize: 11,
+        fontWeight: "600",
+    },
+
+    vaultPriceRow: {
+        flexDirection: "row",
+        alignItems: "baseline",
+        gap: 3,
+        marginTop: 8,
+    },
+
+    vaultPrice: {
+        color: colors.textStrong,
+        fontSize: 18,
         fontWeight: "900",
-        letterSpacing: 1.1,
+        letterSpacing: -0.4,
+    },
+
+    vaultPriceUnit: {
+        color: colors.mutedDark,
+        fontSize: 11,
+        fontWeight: "600",
     },
 
     /* =====================================================
-       CURRENT RENTAL
+       EMPTY RENTAL
     ===================================================== */
 
     emptyRentalCard: {
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
+        gap: 12,
+        padding: spacing.md,
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.lg,
-        paddingVertical: 32,
-        paddingHorizontal: 24,
+        ...shadows.card,
     },
 
     emptyRentalIcon: {
-        width: 54,
-        height: 54,
-        borderRadius: 17,
-        backgroundColor: colors.primarySoft,
+        width: 46,
+        height: 46,
+        borderRadius: 14,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 12,
+    },
+
+    emptyRentalCopy: {
+        flex: 1,
+        gap: 2,
     },
 
     emptyRentalTitle: {
         color: colors.textStrong,
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: "800",
     },
 
     emptyRentalText: {
         color: colors.muted,
-        fontSize: 13,
-        lineHeight: 19,
-        textAlign: "center",
-        marginTop: 4,
-        maxWidth: 290,
+        fontSize: 12,
     },
 
     /* =====================================================
-       HOW VAULTY WORKS
+       HOW IT WORKS
     ===================================================== */
 
     stepsCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: spacing.md,
+        borderRadius: radius.lg,
         backgroundColor: colors.surface,
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.lg,
-        padding: spacing.md,
+        ...shadows.card,
     },
 
     step: {
-        flexDirection: "row",
         alignItems: "center",
-        gap: 10,
-        paddingVertical: 8,
-    },
-
-    stepNumber: {
-        width: 30,
-        height: 30,
-        borderRadius: 10,
-        backgroundColor: colors.primarySoft,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    stepNumberText: {
-        color: colors.primaryLight,
-        fontSize: 10,
-        fontWeight: "900",
+        gap: 6,
+        flex: 1,
     },
 
     stepIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: colors.primarySoft,
+        width: 44,
+        height: 44,
+        borderRadius: 14,
+        backgroundColor: colors.primaryFaint,
         borderWidth: 1,
         borderColor: colors.borderPurple,
         alignItems: "center",
         justifyContent: "center",
     },
 
-    stepCopy: {
-        flex: 1,
-        gap: 3,
+    stepNumber: {
+        color: colors.mutedDark,
+        fontSize: 9,
+        fontWeight: "900",
+        letterSpacing: 1,
+        marginTop: 2,
     },
 
     stepTitle: {
         color: colors.text,
-        fontSize: 14,
-        fontWeight: "800",
-    },
-
-    stepText: {
-        color: colors.muted,
         fontSize: 12,
-        lineHeight: 17,
+        fontWeight: "700",
     },
 
-    stepDivider: {
-        height: 1,
-        backgroundColor: colors.border,
-        marginLeft: 80,
+    stepArrow: {
+        paddingHorizontal: 4,
+        marginBottom: 12,
     },
 
     /* =====================================================
@@ -475,32 +502,187 @@ export const appStyles = StyleSheet.create({
 
     footer: {
         alignItems: "center",
-        paddingTop: 8,
+        paddingTop: spacing.md,
         paddingBottom: 20,
-    },
-
-    footerLogo: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: colors.primarySoft,
-        borderWidth: 1,
-        borderColor: colors.borderPurple,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 10,
-    },
-
-    footerTitle: {
-        color: colors.text,
-        fontSize: 12,
-        fontWeight: "800",
-        letterSpacing: 1,
     },
 
     footerText: {
         color: colors.mutedDark,
         fontSize: 11,
-        marginTop: 3,
+        fontWeight: "600",
+        letterSpacing: 0.5,
+    },
+
+    /* =====================================================
+    ACTIVE RENTAL CARD (Home hero)
+ ===================================================== */
+
+    activeRentalCard: {
+        padding: spacing.md,
+        borderRadius: radius.lg,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+        gap: spacing.md,
+        ...shadows.elevated,
+    },
+
+    activeRentalCardPressed: {
+        opacity: 0.92,
+        transform: [{ scale: 0.99 }],
+    },
+
+    activeRentalTop: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+    },
+
+    activeRentalIconWrap: {
+        width: 42,
+        height: 42,
+        borderRadius: 13,
+        backgroundColor: colors.primaryFaint,
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    activeRentalHeader: {
+        flex: 1,
+        gap: 2,
+    },
+
+    activeRentalEyebrow: {
+        color: colors.primaryLight,
+        fontSize: 10,
+        fontWeight: "900",
+        letterSpacing: 2,
+    },
+
+    activeRentalCode: {
+        color: colors.textStrong,
+        fontSize: 17,
+        fontWeight: "800",
+        letterSpacing: -0.2,
+    },
+
+    activeRentalCountdownWrap: {
+        alignItems: "center",
+        gap: 2,
+    },
+
+    activeRentalCountdown: {
+        color: colors.textStrong,
+        fontSize: 34,
+        fontWeight: "900",
+        letterSpacing: -1,
+    },
+
+    activeRentalCountdownLabel: {
+        color: colors.mutedDark,
+        fontSize: 10,
+        fontWeight: "800",
+        letterSpacing: 1.8,
+        textTransform: "uppercase",
+    },
+
+    activeRentalProgressTrack: {
+        width: "100%",
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: colors.border,
+        overflow: "hidden",
+    },
+
+    activeRentalProgressFill: {
+        height: "100%",
+        borderRadius: 3,
+        backgroundColor: colors.primary,
+    },
+
+    /* =====================================================
+    NEARBY — vertical list variant (used when ≤ 2 vaults)
+ ===================================================== */
+
+    nearbyList: {
+        gap: 10,
+    },
+
+    nearbyRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        padding: 10,
+        borderRadius: radius.md,
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card,
+    },
+
+    nearbyRowPressed: {
+        opacity: 0.88,
+        transform: [{ scale: 0.99 }],
+    },
+
+    nearbyRowImageWrap: {
+        width: 64,
+        height: 64,
+        borderRadius: 12,
+        backgroundColor: colors.surfaceElevated,
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+    },
+
+    nearbyRowImage: {
+        width: "100%",
+        height: "100%",
+    },
+
+    nearbyRowDot: {
+        position: "absolute",
+        top: 6,
+        right: 6,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        borderWidth: 2,
+        borderColor: colors.surface,
+    },
+
+    nearbyRowBody: {
+        flex: 1,
+        gap: 2,
+    },
+
+    nearbyRowRight: {
+        alignItems: "flex-end",
+        gap: 2,
+        paddingRight: 4,
+    },
+    bellBadge: {
+        position: "absolute",
+        top: 4,
+        right: 4,
+        minWidth: 16,
+        height: 16,
+        paddingHorizontal: 4,
+        borderRadius: 8,
+        backgroundColor: colors.danger,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 2,
+        borderColor: colors.surface,
+    },
+
+    bellBadgeText: {
+        color: colors.white,
+        fontSize: 9,
+        fontWeight: "900",
+        letterSpacing: -0.2,
     },
 });

@@ -1,7 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-
-import { useCallback, useEffect, useState } from "react";
-
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
     Linking,
@@ -13,20 +12,16 @@ import {
 } from "react-native";
 
 import SRVBackground from "../../components/SRVBackground";
-
 import { colors } from "../../constants/theme";
-
 import {
     devTopUp,
     getMyTransactions,
     getMyWallet,
 } from "../../services/walletService";
-
 import { createPayMongoCheckout } from "../../services/paymentService";
-
 import { Wallet, WalletTransaction } from "../../types";
-
 import { walletStyles as styles } from "../../styles/wallet.styles";
+import { WalletSkeleton } from "../../components/Skeletons";
 
 /* =========================================================
    FUNCTION: transactionIcon
@@ -40,16 +35,12 @@ const transactionIcon = (
     switch (type) {
         case "top_up":
             return "add-circle-outline";
-
         case "rental":
             return "cube-outline";
-
         case "refund":
             return "return-up-back-outline";
-
         case "promo":
             return "gift-outline";
-
         default:
             return "swap-horizontal-outline";
     }
@@ -69,63 +60,74 @@ const transactionLabel = (transaction: WalletTransaction) => {
     switch (transaction.type) {
         case "top_up":
             return "Points top up";
-
         case "rental":
             return "Vault rental";
-
         case "refund":
             return "Rental refund";
-
         case "promo":
             return "Promotional points";
-
         default:
             return "Wallet adjustment";
     }
 };
 
 /* =========================================================
-   COMPONENT: WalletScreen
+   FUNCTION: groupByDate
 
-   Displays the user's current Vaulty points balance,
-   development top-up controls, PayMongo test checkout,
-   and wallet transaction history.
+   Groups transactions by date and returns an ordered list
+   of date sections, each with its own transactions.
+========================================================= */
+function groupByDate(
+    transactions: WalletTransaction[],
+): { label: string; items: WalletTransaction[] }[] {
+    const groups: Record<string, WalletTransaction[]> = {};
+
+    for (const tx of transactions) {
+        const date = new Date(tx.createdAt);
+        const key = date.toDateString();
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(tx);
+    }
+
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    return Object.entries(groups).map(([key, items]) => {
+        let label: string;
+        if (key === today) label = "Today";
+        else if (key === yesterday) label = "Yesterday";
+        else label = new Date(key).toLocaleDateString();
+
+        return { label, items };
+    });
+}
+
+/* =========================================================
+   COMPONENT: WalletScreen
 ========================================================= */
 export default function WalletScreen() {
     const [wallet, setWallet] = useState<Wallet | null>(null);
-
     const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-
     const [loading, setLoading] = useState(true);
-
     const [refreshing, setRefreshing] = useState(false);
-
     const [error, setError] = useState("");
-
     const [topUpAmount, setTopUpAmount] = useState<number | null>(null);
-
     const [payMongoLoading, setPayMongoLoading] = useState(false);
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        FUNCTION: loadWallet
-
-       Loads the user's wallet balance and transaction history.
-    ========================================================= */
+    --------------------------------------------------------- */
     const loadWallet = useCallback(async () => {
         try {
             setError("");
-
             const [walletData, transactionData] = await Promise.all([
                 getMyWallet(),
                 getMyTransactions(),
             ]);
-
             setWallet(walletData);
-
             setTransactions(transactionData);
         } catch (error) {
             console.error("Failed to load wallet:", error);
-
             setError(
                 error instanceof Error
                     ? error.message
@@ -134,24 +136,17 @@ export default function WalletScreen() {
         }
     }, []);
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        FUNCTION: handleTopUp
-
-       Runs the development-only wallet top-up operation
-       and refreshes the wallet after completion.
-    ========================================================= */
+    --------------------------------------------------------- */
     const handleTopUp = async (amount: number) => {
         try {
             setTopUpAmount(amount);
-
             setError("");
-
             await devTopUp(amount);
-
             await loadWallet();
         } catch (error) {
             console.error("Development top-up failed:", error);
-
             setError(
                 error instanceof Error
                     ? error.message
@@ -162,20 +157,14 @@ export default function WalletScreen() {
         }
     };
 
-    /* =========================================================
-       FUNCTION: handlePayMongoTest
-
-       Creates a ₱100 PayMongo test checkout and opens the
-       hosted checkout URL returned by the backend.
-    ========================================================= */
-    const handlePayMongoTest = async () => {
-        if (payMongoLoading) {
-            return;
-        }
+    /* ---------------------------------------------------------
+       FUNCTION: handlePayMongoCheckout
+    --------------------------------------------------------- */
+    const handlePayMongoCheckout = async () => {
+        if (payMongoLoading) return;
 
         try {
             setPayMongoLoading(true);
-
             setError("");
 
             const checkout = await createPayMongoCheckout({
@@ -183,10 +172,7 @@ export default function WalletScreen() {
                 paymentType: "wallet_top_up",
             });
 
-            console.log("Vaulty PayMongo checkout:", checkout);
-
             const canOpen = await Linking.canOpenURL(checkout.checkoutUrl);
-
             if (!canOpen) {
                 throw new Error(
                     "Your device could not open the PayMongo checkout.",
@@ -195,8 +181,7 @@ export default function WalletScreen() {
 
             await Linking.openURL(checkout.checkoutUrl);
         } catch (error) {
-            console.error("PayMongo test checkout failed:", error);
-
+            console.error("PayMongo checkout failed:", error);
             setError(
                 error instanceof Error
                     ? error.message
@@ -207,53 +192,83 @@ export default function WalletScreen() {
         }
     };
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        FUNCTION: handleRefresh
-
-       Refreshes the wallet balance and transaction history
-       when the user performs pull-to-refresh.
-    ========================================================= */
+    --------------------------------------------------------- */
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
-
             setError("");
-
             await loadWallet();
         } finally {
             setRefreshing(false);
         }
     };
 
-    /* =========================================================
-       EFFECT: INITIAL WALLET LOAD
-
-       Loads wallet information when the screen is first
-       mounted.
-    ========================================================= */
+    /* ---------------------------------------------------------
+       EFFECT: initial load
+    --------------------------------------------------------- */
     useEffect(() => {
-        loadWallet().finally(() => {
-            setLoading(false);
-        });
+        loadWallet().finally(() => setLoading(false));
     }, [loadWallet]);
 
-    /* =========================================================
-       LOADING STATE
-    ========================================================= */
+    const grouped = useMemo(() => groupByDate(transactions), [transactions]);
+
+    const handleBack = () => router.back();
+
+    /* ---------------------------------------------------------
+       LOADING
+    --------------------------------------------------------- */
     if (loading) {
         return (
             <SRVBackground>
-                <View style={styles.loading}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-
-                    <Text style={styles.loadingText}>Loading wallet...</Text>
-                </View>
+                <WalletSkeleton />
             </SRVBackground>
         );
     }
 
     return (
         <SRVBackground>
+            {/* =================================================
+                STICKY HEADER
+            ================================================= */}
+
+            <View style={styles.header}>
+                <Pressable
+                    onPress={handleBack}
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                        styles.headerIcon,
+                        pressed && styles.headerIconPressed,
+                    ]}
+                >
+                    <Ionicons name="arrow-back" size={20} color={colors.text} />
+                </Pressable>
+
+                <View style={styles.headerCopy}>
+                    <Text style={styles.headerEyebrow}>VAULTY WALLET</Text>
+                    <Text style={styles.headerTitle}>Wallet</Text>
+                </View>
+
+                <Pressable
+                    hitSlop={8}
+                    style={({ pressed }) => [
+                        styles.headerIcon,
+                        pressed && styles.headerIconPressed,
+                    ]}
+                >
+                    <Ionicons
+                        name="ellipsis-horizontal"
+                        size={18}
+                        color={colors.text}
+                    />
+                </Pressable>
+            </View>
+
+            {/* =================================================
+                SCROLL
+            ================================================= */}
+
             <ScrollView
                 style={styles.page}
                 contentContainerStyle={styles.content}
@@ -266,30 +281,14 @@ export default function WalletScreen() {
                 }
                 showsVerticalScrollIndicator={false}
             >
-                {/* =================================================
-                    HEADER
-                ================================================= */}
-
-                <View style={styles.header}>
-                    <Text style={styles.eyebrow}>VAULTY WALLET</Text>
-
-                    <Text style={styles.title}>Your points</Text>
-
-                    <Text style={styles.subtitle}>
-                        Use points to rent available Vaulty vaults.
-                    </Text>
-                </View>
-
-                {/* =================================================
-                    BALANCE CARD
-                ================================================= */}
+                {/* ---------- BALANCE ---------- */}
 
                 <View style={styles.balanceCard}>
                     <View style={styles.balanceTop}>
-                        <View style={styles.walletIcon}>
+                        <View style={styles.walletBadge}>
                             <Ionicons
-                                name="wallet-outline"
-                                size={24}
+                                name="wallet"
+                                size={18}
                                 color={colors.primaryLight}
                             />
                         </View>
@@ -303,32 +302,36 @@ export default function WalletScreen() {
                         {(wallet?.balance ?? 0).toLocaleString()}
                     </Text>
 
-                    <Text style={styles.pointsLabel}>POINTS</Text>
+                    <Text style={styles.balanceUnit}>VAULTY POINTS</Text>
                 </View>
 
-                {/* =================================================
-                    TOP UP SECTION
-                ================================================= */}
+                {/* ---------- ERROR ---------- */}
 
-                <View style={styles.topUpSection}>
+                {error ? (
+                    <View style={styles.errorCard}>
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={18}
+                            color={colors.danger}
+                        />
+                        <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                ) : null}
+
+                {/* ---------- QUICK TOP UP ---------- */}
+
+                <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <View>
-                            <Text style={styles.sectionTitle}>
-                                Top up points
-                            </Text>
-
-                            <Text style={styles.sectionSubtitle}>
-                                Development mode
-                            </Text>
-                        </View>
+                        <Text style={styles.sectionTitle}>Quick top up</Text>
+                        <Text style={styles.sectionHint}>Instant</Text>
                     </View>
 
-                    {/* =================================================
-                        DEVELOPMENT TOP-UP GRID
-                    ================================================= */}
-
-                    <View style={styles.topUpGrid}>
-                        {[100, 250, 500, 1000].map((amount) => {
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.topUpGrid}
+                    >
+                        {[100, 250, 500, 1000, 2500, 5000].map((amount) => {
                             const active = topUpAmount === amount;
 
                             return (
@@ -340,55 +343,55 @@ export default function WalletScreen() {
                                     }
                                     style={({ pressed }) => [
                                         styles.topUpButton,
-
                                         active && styles.topUpButtonActive,
-
                                         pressed && styles.topUpButtonPressed,
                                     ]}
                                 >
                                     {active ? (
                                         <ActivityIndicator
                                             size="small"
-                                            color={colors.white}
+                                            color={colors.primaryLight}
                                         />
                                     ) : (
                                         <>
                                             <Text style={styles.topUpAmount}>
                                                 +{amount}
                                             </Text>
-
-                                            <Text style={styles.topUpPoints}>
-                                                POINTS
+                                            <Text style={styles.topUpUnit}>
+                                                PTS
                                             </Text>
                                         </>
                                     )}
                                 </Pressable>
                             );
                         })}
-                    </View>
+                    </ScrollView>
 
-                    <Text style={styles.devNotice}>
+                    <Text style={styles.devHint}>
                         Development top-ups do not process real payments.
                     </Text>
+                </View>
 
-                    {/* =================================================
-                        PAYMONGO TEST CHECKOUT
-                    ================================================= */}
+                {/* ---------- PAY WITH CARD ---------- */}
+
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Pay with card</Text>
+                        <Text style={styles.sectionHint}>PayMongo</Text>
+                    </View>
 
                     <Pressable
-                        onPress={handlePayMongoTest}
+                        onPress={handlePayMongoCheckout}
                         disabled={payMongoLoading}
                         style={({ pressed }) => [
-                            styles.payMongoTestCard,
-
+                            styles.payCard,
                             pressed &&
                                 !payMongoLoading &&
-                                styles.payMongoTestCardPressed,
-
-                            payMongoLoading && styles.payMongoTestCardDisabled,
+                                styles.payCardPressed,
+                            payMongoLoading && styles.payCardDisabled,
                         ]}
                     >
-                        <View style={styles.payMongoTestIcon}>
+                        <View style={styles.payIcon}>
                             {payMongoLoading ? (
                                 <ActivityIndicator
                                     size="small"
@@ -397,161 +400,139 @@ export default function WalletScreen() {
                             ) : (
                                 <Ionicons
                                     name="card-outline"
-                                    size={22}
+                                    size={20}
                                     color={colors.primaryLight}
                                 />
                             )}
                         </View>
 
-                        <View style={styles.payMongoTestCopy}>
-                            <Text style={styles.payMongoTestTitle}>
+                        <View style={styles.payCopy}>
+                            <Text style={styles.payTitle}>
                                 {payMongoLoading
                                     ? "Opening checkout..."
-                                    : "Test PayMongo Checkout"}
+                                    : "Continue with PayMongo"}
                             </Text>
-
-                            <Text style={styles.payMongoTestText}>
-                                Open a ₱100 test payment. No real money is
-                                charged.
+                            <Text style={styles.payText}>
+                                Test mode · ₱100 checkout, no real charge
                             </Text>
                         </View>
 
                         <Ionicons
                             name="chevron-forward"
-                            size={20}
+                            size={18}
                             color={colors.mutedDark}
                         />
                     </Pressable>
                 </View>
 
-                {/* =================================================
-                    ERROR
-                ================================================= */}
+                {/* ---------- RECENT ACTIVITY ---------- */}
 
-                {error ? (
-                    <View style={styles.errorCard}>
-                        <Ionicons
-                            name="alert-circle-outline"
-                            size={20}
-                            color={colors.danger}
-                        />
-
-                        <Text style={styles.errorText}>{error}</Text>
-                    </View>
-                ) : null}
-
-                {/* =================================================
-                    RECENT ACTIVITY
-                ================================================= */}
-
-                <View style={styles.sectionHeader}>
-                    <View>
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Recent activity</Text>
-
-                        <Text style={styles.sectionSubtitle}>
-                            Your points history
-                        </Text>
                     </View>
-                </View>
 
-                {/* =================================================
-                    EMPTY STATE
-                ================================================= */}
-
-                {transactions.length === 0 ? (
-                    <View style={styles.emptyCard}>
-                        <View style={styles.emptyIcon}>
-                            <Ionicons
-                                name="receipt-outline"
-                                size={26}
-                                color={colors.primaryLight}
-                            />
+                    {transactions.length === 0 ? (
+                        <View style={styles.emptyCard}>
+                            <View style={styles.emptyIcon}>
+                                <Ionicons
+                                    name="receipt-outline"
+                                    size={22}
+                                    color={colors.primaryLight}
+                                />
+                            </View>
+                            <Text style={styles.emptyTitle}>
+                                No transactions yet
+                            </Text>
+                            <Text style={styles.emptyText}>
+                                Your top ups, rentals, and refunds will appear
+                                here.
+                            </Text>
                         </View>
-
-                        <Text style={styles.emptyTitle}>
-                            No transactions yet
-                        </Text>
-
-                        <Text style={styles.emptyText}>
-                            Your top ups, rentals, and refunds will appear here.
-                        </Text>
-                    </View>
-                ) : (
-                    /* =================================================
-                       TRANSACTION LIST
-                    ================================================= */
-
-                    <View style={styles.transactionsCard}>
-                        {transactions.map((transaction, index) => {
-                            const positive = transaction.amount > 0;
-
-                            return (
-                                <View
-                                    key={transaction.id}
-                                    style={[
-                                        styles.transaction,
-
-                                        index < transactions.length - 1 &&
-                                            styles.transactionBorder,
-                                    ]}
-                                >
-                                    {/* =================================
-                                            TRANSACTION ICON
-                                        ================================= */}
-
-                                    <View style={styles.transactionIcon}>
-                                        <Ionicons
-                                            name={transactionIcon(
-                                                transaction.type,
-                                            )}
-                                            size={20}
-                                            color={
-                                                positive
-                                                    ? colors.success
-                                                    : colors.muted
-                                            }
-                                        />
-                                    </View>
-
-                                    {/* =================================
-                                            TRANSACTION DETAILS
-                                        ================================= */}
-
-                                    <View style={styles.transactionCopy}>
-                                        <Text style={styles.transactionTitle}>
-                                            {transactionLabel(transaction)}
-                                        </Text>
-
-                                        <Text style={styles.transactionDate}>
-                                            {new Date(
-                                                transaction.createdAt,
-                                            ).toLocaleDateString()}
-                                        </Text>
-                                    </View>
-
-                                    {/* =================================
-                                            TRANSACTION AMOUNT
-                                        ================================= */}
-
+                    ) : (
+                        <View style={styles.activityList}>
+                            {grouped.map((group, gi) => (
+                                <View key={group.label}>
                                     <Text
                                         style={[
-                                            styles.transactionAmount,
-                                            {
-                                                color: positive
-                                                    ? colors.success
-                                                    : colors.text,
-                                            },
+                                            styles.dateHeader,
+                                            gi > 0 && styles.dateHeaderSpaced,
                                         ]}
                                     >
-                                        {positive ? "+" : ""}
-
-                                        {transaction.amount.toLocaleString()}
+                                        {group.label}
                                     </Text>
+
+                                    <View style={styles.transactionsCard}>
+                                        {group.items.map((tx, ti) => {
+                                            const positive = tx.amount > 0;
+
+                                            return (
+                                                <View
+                                                    key={tx.id}
+                                                    style={[
+                                                        styles.transaction,
+                                                        ti <
+                                                            group.items.length -
+                                                                1 &&
+                                                            styles.transactionBorder,
+                                                    ]}
+                                                >
+                                                    <View
+                                                        style={
+                                                            styles.transactionIcon
+                                                        }
+                                                    >
+                                                        <Ionicons
+                                                            name={transactionIcon(
+                                                                tx.type,
+                                                            )}
+                                                            size={18}
+                                                            color={
+                                                                positive
+                                                                    ? colors.success
+                                                                    : colors.muted
+                                                            }
+                                                        />
+                                                    </View>
+
+                                                    <View
+                                                        style={
+                                                            styles.transactionCopy
+                                                        }
+                                                    >
+                                                        <Text
+                                                            style={
+                                                                styles.transactionTitle
+                                                            }
+                                                        >
+                                                            {transactionLabel(
+                                                                tx,
+                                                            )}
+                                                        </Text>
+                                                    </View>
+
+                                                    <Text
+                                                        style={[
+                                                            styles.transactionAmount,
+                                                            {
+                                                                color: positive
+                                                                    ? colors.success
+                                                                    : colors.text,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {positive ? "+" : ""}
+                                                        {tx.amount.toLocaleString()}
+                                                    </Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
                                 </View>
-                            );
-                        })}
-                    </View>
-                )}
+                            ))}
+                        </View>
+                    )}
+                </View>
             </ScrollView>
         </SRVBackground>
     );

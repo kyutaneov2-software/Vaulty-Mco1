@@ -10,7 +10,10 @@
     "backgroundColor": "#09070D",
     "ios": {
       "icon": "./assets/expo.icon",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Vaulty uses your location to show nearby vaults on the map."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,9 +22,15 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.kyutaofficial.rentalvault"
+      "package": "com.kyutaofficial.rentalvault",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIza...YOUR-ACTUAL-KEY-HERE"
+        }
+      }
     },
     "web": {
       "output": "static",
@@ -48,8 +57,15 @@
           "photosPermission": "Allow Vaulty to access your photos so you can choose a profile picture."
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Vaulty uses your location to show nearby vaults on the map."
+        }
+      ],
       "expo-secure-store",
-      "expo-asset"
+      "expo-asset",
+      "expo-maps"
     ],
     "experiments": {
       "typedRoutes": true,

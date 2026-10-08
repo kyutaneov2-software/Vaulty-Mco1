@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Pressable,
@@ -9,552 +9,692 @@ import {
     Text,
     View,
 } from "react-native";
+import { Image } from "expo-image";
 
 import SRVBackground from "../../components/SRVBackground";
 import SRVAvatar from "../../components/SRVAvatar";
 import { colors } from "../../constants/theme";
 import { useAuth } from "../../context/AuthContext";
+import { useWallet } from "../../context/WalletContext";
 import { getMyProfile } from "../../services/profileService";
-import { getMyWallet } from "../../services/walletService";
-import { Wallet } from "../../types";
+import {
+    getActiveRental,
+    getAvailableVaults,
+    Rental,
+    Vault,
+} from "../../services/vaultService";
 import { appStyles as styles } from "../../styles/app.styles";
+import { countUnread } from "../../services/notificationService";
+import { HomeSkeleton } from "../../components/Skeletons";
 
-    /* =========================================================
-    COMPONENT: HomeScreen
+/* =========================================================
+   FUNCTION: formatRemaining
+========================================================= */
+function formatRemaining(ms: number): string {
+    if (ms <= 0) return "Expired";
 
-    Displays the main authenticated Vaulty dashboard,
-    including the user's profile header, wallet, vault
-    discovery area, current rental, and app guidance.
-    ========================================================= */
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
+}
+
 export default function HomeScreen() {
     const { user } = useAuth();
-
-    const [wallet, setWallet] = useState<Wallet | null>(null);
+    const { balance, refresh: refreshWallet } = useWallet();
 
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
+    const [vaults, setVaults] = useState<Vault[]>([]);
+    const [activeRental, setActiveRental] = useState<Rental | null>(null);
+    const [remainingMs, setRemainingMs] = useState(0);
     const [loading, setLoading] = useState(true);
-
     const [refreshing, setRefreshing] = useState(false);
-
     const [error, setError] = useState("");
+    const [unreadCount, setUnreadCount] = useState(0);
+    
 
-    /* =====================================================
-        FUNCTION: loadWallet
+    /* ---------------------------------------------------------
+       Loaders
+    --------------------------------------------------------- */
 
-        Loads the authenticated user's wallet data.
-    ===================================================== */
-    const loadWallet = useCallback(async () => {
-        try {
-            const walletData = await getMyWallet();
-
-            setWallet(walletData);
-
-            return true;
-        } catch (error) {
-            console.error("Failed to load wallet:", error);
-
-            setError("Unable to load your wallet.");
-
-            return false;
-        }
-    }, []);
-
-    /* =====================================================
-        FUNCTION: loadProfileAvatar
-
-        Loads the user's profile so the latest avatar is
-        reflected on the Home screen.
-    ===================================================== */
     const loadProfileAvatar = useCallback(async () => {
         try {
             const profile = await getMyProfile();
-
             setAvatarUrl(profile.avatarUrl);
         } catch (error) {
             console.error("Failed to load profile:", error);
-
             setAvatarUrl(null);
         }
     }, []);
 
-    /* =====================================================
-        FUNCTION: initialize
+    const loadVaults = useCallback(async () => {
+        try {
+            const data = await getAvailableVaults();
+            setVaults(data);
+        } catch (error) {
+            console.error("Failed to load vaults:", error);
+        }
+    }, []);
 
-        Performs the initial Home screen data loading.
-    ===================================================== */
+    const loadActiveRental = useCallback(async () => {
+        try {
+            const rental = await getActiveRental();
+            setActiveRental(rental);
+
+            if (rental) {
+                setRemainingMs(
+                    new Date(rental.expiresAt).getTime() - Date.now(),
+                );
+            }
+        } catch (error) {
+            console.error("Failed to load active rental:", error);
+            setActiveRental(null);
+        }
+    }, []);
+
     const initialize = useCallback(async () => {
         try {
             setError("");
-
-            await Promise.all([loadWallet(), loadProfileAvatar()]);
+            await Promise.all([
+                refreshWallet(),
+                loadProfileAvatar(),
+                loadVaults(),
+                loadActiveRental(),
+            ]);
         } finally {
             setLoading(false);
         }
-    }, [loadWallet, loadProfileAvatar]);
+    }, [refreshWallet, loadProfileAvatar, loadVaults, loadActiveRental]);
 
-    /* =====================================================
-        EFFECT: INITIAL LOAD
-
-        Runs once whenever the required loading callbacks
-        are available.
-    ===================================================== */
     useEffect(() => {
         initialize();
     }, [initialize]);
 
-    /* =====================================================
-        EFFECT: REFRESH ON FOCUS
-
-        Reloads the user's avatar whenever the Home screen
-        receives focus, especially after returning from
-        the Profile page.
-    ===================================================== */
     useFocusEffect(
         useCallback(() => {
             loadProfileAvatar();
-        }, [loadProfileAvatar]),
+            loadActiveRental();
+            refreshWallet();
+        }, [loadProfileAvatar, loadActiveRental, refreshWallet]),
     );
 
-    /* =====================================================
-        FUNCTION: handleRefresh
+    /* ---------------------------------------------------------
+       Countdown ticker
+    --------------------------------------------------------- */
+    const rentalRef = useRef<Rental | null>(null);
+    rentalRef.current = activeRental;
 
-        Refreshes wallet and profile data when the user
-        pulls down on the dashboard.
-    ===================================================== */
+    useEffect(() => {
+        if (!activeRental) return;
+
+        const tick = () => {
+            const current = rentalRef.current;
+            if (!current) return;
+
+            const remaining = Math.max(
+                0,
+                new Date(current.expiresAt).getTime() - Date.now(),
+            );
+            setRemainingMs(remaining);
+        };
+
+        tick();
+        const interval = setInterval(tick, 1000);
+
+        return () => clearInterval(interval);
+    }, [activeRental]);
+
+    /* ---------------------------------------------------------
+       Refresh
+    --------------------------------------------------------- */
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
             setError("");
-
-            await Promise.all([loadWallet(), loadProfileAvatar()]);
+            await Promise.all([
+                refreshWallet(),
+                loadProfileAvatar(),
+                loadVaults(),
+                loadActiveRental(),
+            ]);
         } finally {
             setRefreshing(false);
         }
     };
 
-    /* =====================================================
-        FUNCTION: getGreeting
+    useFocusEffect(
+        useCallback(() => {
+            countUnread()
+                .then(setUnreadCount)
+                .catch((error) => console.error("Unread count failed:", error));
+        }, []),
+    );
 
-        Returns a greeting based on the user's current
-        local time.
-    ===================================================== */
+    /* ---------------------------------------------------------
+       Derived
+    --------------------------------------------------------- */
     const getGreeting = () => {
         const hour = new Date().getHours();
-
-        if (hour < 12) {
-            return "Good morning";
-        }
-
-        if (hour < 18) {
-            return "Good afternoon";
-        }
-
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
         return "Good evening";
     };
 
     const firstName = user?.name?.trim().split(" ")[0] ?? "there";
+    const nearby = vaults.slice(0, 5);
+    const onlineCount = vaults.filter((v) => v.online).length;
+    const useCompactList = nearby.length <= 2;
 
-    /* =====================================================
-        FUNCTION: handleProfilePress
-
-        Navigates the user to the Profile page.
-    ===================================================== */
-    const handleProfilePress = () => {
-        router.push("/profile");
+    /* ---------------------------------------------------------
+       Navigation
+    --------------------------------------------------------- */
+    const handleProfilePress = () => router.push("/profile");
+    const handleWalletPress = () => router.push("/wallet");
+    const handleMapPress = () => router.push("/vaults/map");
+    const handleVaultPress = (vault: Vault) =>
+        router.push(`/vaults/${vault.id}`);
+    const handleRentalPress = () => {
+        if (activeRental) {
+            router.push(`/vaults/active?id=${activeRental.id}`);
+        }
     };
 
-    /* =====================================================
-        FUNCTION: handleWalletPress
-
-        Navigates the user to the Wallet page.
-    ===================================================== */
-    const handleWalletPress = () => {
-        router.push("/wallet");
-    };
-
-    /* =====================================================
-        FUNCTION: handleFindVaultPress
-
-        Placeholder navigation handler for the future
-        vault discovery feature.
-    ===================================================== */
-    const handleFindVaultPress = () => {
-        // Vault discovery will be connected later.
-    };
-
-    /* =====================================================
-    FUNCTION: handleNotificationPress
-
-    Placeholder handler for the future notification
-    center.
-    ===================================================== */
-    const handleNotificationPress = () => {
-        // Notifications will be connected later.
-    };
-
-    /* =====================================================
-    LOADING STATE
-    ===================================================== */
-
+    /* ---------------------------------------------------------
+       Loading
+    --------------------------------------------------------- */
     if (loading) {
         return (
             <SRVBackground>
-                <View style={styles.loading}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-
-                    <Text style={styles.loadingText}>Loading Vaulty...</Text>
-                </View>
+                <HomeSkeleton />
             </SRVBackground>
         );
     }
 
     return (
         <SRVBackground>
-            <View style={styles.screen}>
-                {/* =================================================
-                    STICKY HEADER
-                ================================================= */}
+            {/* Sticky header */}
 
-                <View style={styles.stickyHeader}>
-                    <View style={styles.header}>
-                        <Pressable
-                            onPress={handleProfilePress}
-                            style={({ pressed }) => [
-                                styles.headerBrand,
-                                pressed && styles.headerBrandPressed,
-                            ]}
-                        >
-                            <SRVAvatar
-                                size={52}
-                                name={user?.name}
-                                imageUrl={avatarUrl}
-                            />
-
-                            <View style={styles.headerText}>
-                                <Text style={styles.greeting}>
-                                    {getGreeting()},
-                                </Text>
-
-                                <Text style={styles.name}>{firstName}.</Text>
-                            </View>
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.notificationButton,
-                                pressed && styles.notificationPressed,
-                            ]}
-                            onPress={handleNotificationPress}
-                        >
-                            <Ionicons
-                                name="notifications-outline"
-                                size={21}
-                                color={colors.text}
-                            />
-                        </Pressable>
-                    </View>
-
-                    <Text style={styles.headerSubtitle}>
-                        Secure storage, whenever you need it.
-                    </Text>
-                </View>
-
-                {/* =================================================
-                    SCROLLABLE CONTENT
-                ================================================= */}
-
-                <ScrollView
-                    style={styles.page}
-                    contentContainerStyle={styles.content}
-                    showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={handleRefresh}
-                            tintColor={colors.primary}
-                        />
-                    }
-                >
-                    {/* =================================================
-                        WALLET
-                    ================================================= */}
-
+            <View style={styles.stickyHeader}>
+                <View style={styles.header}>
                     <Pressable
-                        onPress={handleWalletPress}
+                        onPress={handleProfilePress}
                         style={({ pressed }) => [
-                            styles.walletCard,
-                            pressed && styles.walletCardPressed,
+                            styles.headerBrand,
+                            pressed && styles.headerBrandPressed,
                         ]}
                     >
-                        <View style={styles.walletTop}>
-                            <View>
-                                <Text style={styles.walletLabel}>
-                                    VAULTY WALLET
-                                </Text>
+                        <SRVAvatar
+                            size={44}
+                            name={user?.name}
+                            imageUrl={avatarUrl}
+                        />
 
-                                <Text style={styles.walletDescription}>
-                                    Available points
-                                </Text>
-                            </View>
-
-                            <View style={styles.walletIcon}>
-                                <Ionicons
-                                    name="wallet-outline"
-                                    size={22}
-                                    color={colors.primaryLight}
-                                />
-                            </View>
-                        </View>
-
-                        <Text style={styles.walletBalance}>
-                            {(wallet?.balance ?? 0).toLocaleString()}
-                        </Text>
-
-                        <View style={styles.walletBottom}>
-                            <Text style={styles.walletPoints}>POINTS</Text>
-
-                            <View style={styles.walletLink}>
-                                <Text style={styles.walletLinkText}>
-                                    View wallet
-                                </Text>
-
-                                <Ionicons
-                                    name="arrow-forward"
-                                    size={15}
-                                    color={colors.primaryLight}
-                                />
-                            </View>
+                        <View style={styles.headerText}>
+                            <Text style={styles.greeting}>
+                                {getGreeting()},
+                            </Text>
+                            <Text style={styles.name}>{firstName}.</Text>
                         </View>
                     </Pressable>
 
-                    {/* =================================================
-                        ERROR
-                    ================================================= */}
+                    <Pressable
+                        onPress={() => router.push("/notifications")}
+                        style={({ pressed }) => [
+                            styles.iconButton,
+                            pressed && styles.iconButtonPressed,
+                        ]}
+                    >
+                        <Ionicons
+                            name="notifications-outline"
+                            size={20}
+                            color={colors.text}
+                        />
 
-                    {error ? (
-                        <View style={styles.errorCard}>
-                            <Ionicons
-                                name="alert-circle-outline"
-                                size={19}
-                                color={colors.danger}
-                            />
-
-                            <Text style={styles.errorText}>{error}</Text>
-                        </View>
-                    ) : null}
-
-                    {/* =================================================
-                        FIND A VAULT
-                    ================================================= */}
-
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <View>
-                                <Text style={styles.sectionTitle}>
-                                    Find a Vault
-                                </Text>
-
-                                <Text style={styles.sectionSubtitle}>
-                                    Discover secure storage near you.
+                        {unreadCount > 0 ? (
+                            <View style={styles.bellBadge}>
+                                <Text style={styles.bellBadgeText}>
+                                    {unreadCount > 9 ? "9+" : unreadCount}
                                 </Text>
                             </View>
-                        </View>
+                        ) : null}
+                    </Pressable>
+                </View>
 
-                        <Pressable
-                            onPress={handleFindVaultPress}
-                            style={({ pressed }) => [
-                                styles.findVaultCard,
-                                pressed && styles.findVaultPressed,
-                            ]}
-                        >
-                            <View style={styles.findVaultIcon}>
+                <View style={styles.pillRow}>
+                    <Pressable
+                        onPress={handleWalletPress}
+                        style={({ pressed }) => [
+                            styles.walletPill,
+                            pressed && styles.pillPressed,
+                        ]}
+                    >
+                        <Ionicons
+                            name="wallet-outline"
+                            size={14}
+                            color={colors.primaryLight}
+                        />
+                        <Text style={styles.walletPillValue}>
+                            {balance.toLocaleString()}
+                        </Text>
+                        <Text style={styles.walletPillUnit}>pts</Text>
+                    </Pressable>
+                </View>
+            </View>
+
+            <ScrollView
+                style={styles.page}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
+                {error ? (
+                    <View style={styles.errorCard}>
+                        <Ionicons
+                            name="alert-circle-outline"
+                            size={18}
+                            color={colors.danger}
+                        />
+                        <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                ) : null}
+
+                {/* Active rental */}
+
+                {activeRental ? (
+                    <Pressable
+                        onPress={handleRentalPress}
+                        style={({ pressed }) => [
+                            styles.activeRentalCard,
+                            pressed && styles.activeRentalCardPressed,
+                        ]}
+                    >
+                        <View style={styles.activeRentalTop}>
+                            <View style={styles.activeRentalIconWrap}>
                                 <Ionicons
-                                    name="location-outline"
-                                    size={28}
+                                    name="lock-closed"
+                                    size={20}
                                     color={colors.primaryLight}
                                 />
                             </View>
 
-                            <View style={styles.findVaultCopy}>
-                                <Text style={styles.findVaultTitle}>
-                                    Explore nearby vaults
+                            <View style={styles.activeRentalHeader}>
+                                <Text style={styles.activeRentalEyebrow}>
+                                    ACTIVE RENTAL
                                 </Text>
-
-                                <Text style={styles.findVaultText}>
-                                    Vault discovery and real-time availability
-                                    are coming next.
+                                <Text style={styles.activeRentalCode}>
+                                    {activeRental.vaultCode}
                                 </Text>
-
-                                <View style={styles.comingSoonBadge}>
-                                    <Text style={styles.comingSoonText}>
-                                        COMING SOON
-                                    </Text>
-                                </View>
                             </View>
 
                             <Ionicons
                                 name="chevron-forward"
-                                size={20}
+                                size={18}
                                 color={colors.mutedDark}
+                            />
+                        </View>
+
+                        <View style={styles.activeRentalCountdownWrap}>
+                            <Text style={styles.activeRentalCountdown}>
+                                {formatRemaining(remainingMs)}
+                            </Text>
+                            <Text style={styles.activeRentalCountdownLabel}>
+                                remaining
+                            </Text>
+                        </View>
+
+                        <View style={styles.activeRentalProgressTrack}>
+                            <View
+                                style={[
+                                    styles.activeRentalProgressFill,
+                                    {
+                                        width: `${Math.min(
+                                            100,
+                                            (remainingMs /
+                                                (new Date(
+                                                    activeRental.expiresAt,
+                                                ).getTime() -
+                                                    new Date(
+                                                        activeRental.startedAt,
+                                                    ).getTime())) *
+                                                100,
+                                        )}%`,
+                                    },
+                                ]}
+                            />
+                        </View>
+                    </Pressable>
+                ) : null}
+
+                {/* Find a vault */}
+
+                <View style={styles.heroCard}>
+                    <View style={styles.heroHeader}>
+                        <Text style={styles.heroEyebrow}>FIND A VAULT</Text>
+                        <Text style={styles.heroSubtitle}>
+                            Discover secure storage near you.
+                        </Text>
+                    </View>
+
+                    <Pressable
+                        onPress={handleMapPress}
+                        style={({ pressed }) => [
+                            styles.mapPreview,
+                            pressed && styles.mapPreviewPressed,
+                        ]}
+                    >
+                        {nearby.map((v, i) => {
+                            const positions = [
+                                { top: "30%", left: "28%" },
+                                { top: "55%", left: "62%" },
+                                { top: "22%", left: "68%" },
+                                { top: "68%", left: "34%" },
+                                { top: "42%", left: "48%" },
+                            ];
+                            const pos = positions[i % positions.length];
+
+                            return (
+                                <View
+                                    key={v.id}
+                                    style={[
+                                        styles.mapPin,
+                                        {
+                                            top: pos.top,
+                                            left: pos.left,
+                                            backgroundColor: v.online
+                                                ? colors.primary
+                                                : colors.mutedDark,
+                                        },
+                                    ]}
+                                />
+                            );
+                        })}
+
+                        <View style={styles.mapBadge}>
+                            <View style={styles.mapBadgeDot} />
+                            <Text style={styles.mapBadgeText}>
+                                {onlineCount}{" "}
+                                {onlineCount === 1 ? "vault" : "vaults"} online
+                            </Text>
+                        </View>
+                    </Pressable>
+
+                    <Pressable
+                        onPress={handleMapPress}
+                        style={({ pressed }) => [
+                            styles.heroButton,
+                            pressed && styles.heroButtonPressed,
+                        ]}
+                    >
+                        <Text style={styles.heroButtonText}>Open map</Text>
+                        <Ionicons
+                            name="arrow-forward"
+                            size={16}
+                            color={colors.white}
+                        />
+                    </Pressable>
+                </View>
+
+                {/* Nearby */}
+
+                <View>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Nearby</Text>
+
+                        <Pressable
+                            onPress={handleMapPress}
+                            hitSlop={8}
+                            style={styles.seeAll}
+                        >
+                            <Text style={styles.seeAllText}>See all</Text>
+                            <Ionicons
+                                name="chevron-forward"
+                                size={14}
+                                color={colors.primaryLight}
                             />
                         </Pressable>
                     </View>
 
-                    {/* =================================================
-                        CURRENT RENTAL
-                    ================================================= */}
+                    {useCompactList ? (
+                        <View style={styles.nearbyList}>
+                            {nearby.map((vault) => (
+                                <Pressable
+                                    key={vault.id}
+                                    onPress={() => handleVaultPress(vault)}
+                                    style={({ pressed }) => [
+                                        styles.nearbyRow,
+                                        pressed && styles.nearbyRowPressed,
+                                    ]}
+                                >
+                                    <View style={styles.nearbyRowImageWrap}>
+                                        <Image
+                                            source={vault.image}
+                                            style={styles.nearbyRowImage}
+                                            contentFit="contain"
+                                            transition={200}
+                                        />
 
-                    <View style={styles.section}>
+                                        <View
+                                            style={[
+                                                styles.nearbyRowDot,
+                                                {
+                                                    backgroundColor:
+                                                        vault.online
+                                                            ? colors.success
+                                                            : colors.mutedDark,
+                                                },
+                                            ]}
+                                        />
+                                    </View>
+
+                                    <View style={styles.nearbyRowBody}>
+                                        <Text style={styles.vaultCode}>
+                                            {vault.code}
+                                        </Text>
+                                        <Text style={styles.vaultSize}>
+                                            {vault.size}
+                                        </Text>
+
+                                        <View style={styles.vaultMeta}>
+                                            <Ionicons
+                                                name="location-outline"
+                                                size={12}
+                                                color={colors.mutedDark}
+                                            />
+                                            <Text
+                                                style={styles.vaultMetaText}
+                                                numberOfLines={1}
+                                            >
+                                                {vault.location}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.nearbyRowRight}>
+                                        <Text style={styles.vaultPrice}>
+                                            ₱{vault.priceHour}
+                                        </Text>
+                                        <Text style={styles.vaultPriceUnit}>
+                                            /hr
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            ))}
+                        </View>
+                    ) : (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.vaultScroll}
+                        >
+                            {nearby.map((vault) => (
+                                <Pressable
+                                    key={vault.id}
+                                    onPress={() => handleVaultPress(vault)}
+                                    style={({ pressed }) => [
+                                        styles.vaultCard,
+                                        pressed && styles.vaultCardPressed,
+                                    ]}
+                                >
+                                    <View style={styles.vaultImageWrap}>
+                                        <Image
+                                            source={vault.image}
+                                            style={styles.vaultImage}
+                                            contentFit="contain"
+                                            transition={200}
+                                        />
+
+                                        <View
+                                            style={[
+                                                styles.vaultDot,
+                                                {
+                                                    backgroundColor:
+                                                        vault.online
+                                                            ? colors.success
+                                                            : colors.mutedDark,
+                                                },
+                                            ]}
+                                        />
+                                    </View>
+
+                                    <Text style={styles.vaultCode}>
+                                        {vault.code}
+                                    </Text>
+                                    <Text style={styles.vaultSize}>
+                                        {vault.size}
+                                    </Text>
+
+                                    <View style={styles.vaultMeta}>
+                                        <Ionicons
+                                            name="location-outline"
+                                            size={12}
+                                            color={colors.mutedDark}
+                                        />
+                                        <Text style={styles.vaultMetaText}>
+                                            {vault.distanceKm > 0
+                                                ? `${vault.distanceKm.toFixed(1)} km`
+                                                : vault.location}
+                                        </Text>
+                                    </View>
+
+                                    <View style={styles.vaultPriceRow}>
+                                        <Text style={styles.vaultPrice}>
+                                            ₱{vault.priceHour}
+                                        </Text>
+                                        <Text style={styles.vaultPriceUnit}>
+                                            /hr
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            ))}
+                        </ScrollView>
+                    )}
+                </View>
+
+                {/* Empty rental */}
+
+                {!activeRental ? (
+                    <View>
                         <View style={styles.sectionHeader}>
-                            <View style={styles.sectionTitleRow}>
-                                <View style={styles.sectionLogo}>
-                                    <Ionicons
-                                        name="cube-outline"
-                                        size={21}
-                                        color={colors.primaryLight}
-                                    />
-                                </View>
-
-                                <View style={styles.sectionTitleCopy}>
-                                    <Text style={styles.sectionTitle}>
-                                        Current rental
-                                    </Text>
-
-                                    <Text style={styles.sectionSubtitle}>
-                                        Your active vault sessions.
-                                    </Text>
-                                </View>
-                            </View>
+                            <Text style={styles.sectionTitle}>Your rental</Text>
                         </View>
 
                         <View style={styles.emptyRentalCard}>
                             <View style={styles.emptyRentalIcon}>
                                 <Ionicons
                                     name="cube-outline"
-                                    size={26}
+                                    size={22}
                                     color={colors.primaryLight}
                                 />
                             </View>
 
-                            <Text style={styles.emptyRentalTitle}>
-                                No active rental
-                            </Text>
-
-                            <Text style={styles.emptyRentalText}>
-                                Your current vault reservation will appear here.
-                            </Text>
-                        </View>
-                    </View>
-
-                    {/* =================================================
-                        HOW VAULTY WORKS
-                    ================================================= */}
-
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <View>
-                                <Text style={styles.sectionTitle}>
-                                    How Vaulty works
+                            <View style={styles.emptyRentalCopy}>
+                                <Text style={styles.emptyRentalTitle}>
+                                    No active rental
                                 </Text>
-
-                                <Text style={styles.sectionSubtitle}>
-                                    Simple, secure, on-demand.
+                                <Text style={styles.emptyRentalText}>
+                                    Find a vault to get started.
                                 </Text>
                             </View>
-                        </View>
 
-                        <View style={styles.stepsCard}>
-                            <Step
-                                number="01"
-                                icon="search-outline"
-                                title="Find a vault"
-                                text="Choose a storage location near you."
-                            />
-
-                            <View style={styles.stepDivider} />
-
-                            <Step
-                                number="02"
-                                icon="time-outline"
-                                title="Choose your time"
-                                text="Rent only for the time you need."
-                            />
-
-                            <View style={styles.stepDivider} />
-
-                            <Step
-                                number="03"
-                                icon="shield-checkmark-outline"
-                                title="Access securely"
-                                text="Your reservation controls your vault access."
-                            />
-                        </View>
-                    </View>
-
-                    {/* =================================================
-                        FOOTER
-                    ================================================= */}
-
-                    <View style={styles.footer}>
-                        <View style={styles.footerLogo}>
                             <Ionicons
-                                name="cube-outline"
-                                size={22}
-                                color={colors.primaryLight}
+                                name="chevron-forward"
+                                size={18}
+                                color={colors.mutedDark}
+                            />
+                        </View>
+                    </View>
+                ) : null}
+
+                {/* How it works */}
+
+                <View>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>How it works</Text>
+                    </View>
+
+                    <View style={styles.stepsCard}>
+                        <Step number="01" icon="search-outline" title="Find" />
+
+                        <View style={styles.stepArrow}>
+                            <Ionicons
+                                name="arrow-forward"
+                                size={14}
+                                color={colors.mutedDark}
                             />
                         </View>
 
-                        <Text style={styles.footerTitle}>
-                            Smart Rental Vault
-                        </Text>
+                        <Step number="02" icon="time-outline" title="Rent" />
 
-                        <Text style={styles.footerText}>
-                            Store small. Move smart.
-                        </Text>
+                        <View style={styles.stepArrow}>
+                            <Ionicons
+                                name="arrow-forward"
+                                size={14}
+                                color={colors.mutedDark}
+                            />
+                        </View>
+
+                        <Step
+                            number="03"
+                            icon="lock-open-outline"
+                            title="Unlock"
+                        />
                     </View>
-                </ScrollView>
-            </View>
+                </View>
+
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>
+                        Vaulty • Smart Rental Vault
+                    </Text>
+                </View>
+            </ScrollView>
         </SRVBackground>
     );
 }
-
-    /* =========================================================
-    TYPE: StepProps
-
-    Defines the properties used by the reusable Step
-    component on the Home screen.
-    ========================================================= */
 
 type StepProps = {
     number: string;
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
-    text: string;
 };
 
-    /* =========================================================
-    COMPONENT: Step
-
-    Renders one instructional step explaining how Vaulty
-    works.
-    ========================================================= */
-function Step({ number, icon, title, text }: StepProps) {
+function Step({ number, icon, title }: StepProps) {
     return (
         <View style={styles.step}>
-            <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>{number}</Text>
-            </View>
-
             <View style={styles.stepIcon}>
-                <Ionicons name={icon} size={20} color={colors.primaryLight} />
+                <Ionicons name={icon} size={18} color={colors.primaryLight} />
             </View>
-
-            <View style={styles.stepCopy}>
-                <Text style={styles.stepTitle}>{title}</Text>
-
-                <Text style={styles.stepText}>{text}</Text>
-            </View>
+            <Text style={styles.stepNumber}>{number}</Text>
+            <Text style={styles.stepTitle}>{title}</Text>
         </View>
     );
 }

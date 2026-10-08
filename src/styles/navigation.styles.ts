@@ -1,28 +1,12 @@
 import { Platform, StyleSheet } from "react-native";
 import { colors } from "../constants/theme";
 
-/* =========================================================
-   STYLESHEET: NAVIGATION STYLES
-
-   Shared visual styles for Vaulty's authenticated
-   bottom-tab navigation.
-========================================================= */
-
 export const navigationStyles = StyleSheet.create({
-    /* =====================================================
-       TAB BAR
-    ===================================================== */
-
     tabBar: {
         backgroundColor: colors.surface,
         borderTopWidth: 1,
         borderTopColor: colors.border,
 
-        /*
-         * Keep the tab bar comfortably sized on both
-         * Android and iOS while allowing React Navigation
-         * to handle device safe-area insets.
-         */
         height: Platform.select({
             ios: 76,
             android: 68,
@@ -46,22 +30,14 @@ export const navigationStyles = StyleSheet.create({
             height: -5,
         },
 
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.4,
         shadowRadius: 14,
     },
-
-    /* =====================================================
-       TAB ITEM
-    ===================================================== */
 
     tabItem: {
         paddingTop: 2,
         paddingBottom: 2,
     },
-
-    /* =====================================================
-       TAB LABEL
-    ===================================================== */
 
     tabLabel: {
         fontSize: 11,
@@ -69,10 +45,6 @@ export const navigationStyles = StyleSheet.create({
         letterSpacing: 0.2,
         marginTop: 1,
     },
-
-    /* =====================================================
-       TAB ICON
-    ===================================================== */
 
     tabIcon: {
         marginTop: 1,
