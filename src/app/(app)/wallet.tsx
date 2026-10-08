@@ -1,7 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+
 import { useCallback, useEffect, useState } from "react";
+
 import {
     ActivityIndicator,
+    Linking,
     Pressable,
     RefreshControl,
     ScrollView,
@@ -10,13 +13,19 @@ import {
 } from "react-native";
 
 import SRVBackground from "../../components/SRVBackground";
+
 import { colors } from "../../constants/theme";
+
 import {
     devTopUp,
     getMyTransactions,
     getMyWallet,
 } from "../../services/walletService";
+
+import { createPayMongoCheckout } from "../../services/paymentService";
+
 import { Wallet, WalletTransaction } from "../../types";
+
 import { walletStyles as styles } from "../../styles/wallet.styles";
 
 /* =========================================================
@@ -78,8 +87,9 @@ const transactionLabel = (transaction: WalletTransaction) => {
 /* =========================================================
    COMPONENT: WalletScreen
 
-   Displays the user's current points balance, development
-   top-up controls, and wallet transaction history.
+   Displays the user's current Vaulty points balance,
+   development top-up controls, PayMongo test checkout,
+   and wallet transaction history.
 ========================================================= */
 export default function WalletScreen() {
     const [wallet, setWallet] = useState<Wallet | null>(null);
@@ -94,11 +104,13 @@ export default function WalletScreen() {
 
     const [topUpAmount, setTopUpAmount] = useState<number | null>(null);
 
-    /* =====================================================
+    const [payMongoLoading, setPayMongoLoading] = useState(false);
+
+    /* =========================================================
        FUNCTION: loadWallet
 
-       Loads the user's wallet and transaction history.
-    ===================================================== */
+       Loads the user's wallet balance and transaction history.
+    ========================================================= */
     const loadWallet = useCallback(async () => {
         try {
             setError("");
@@ -109,6 +121,7 @@ export default function WalletScreen() {
             ]);
 
             setWallet(walletData);
+
             setTransactions(transactionData);
         } catch (error) {
             console.error("Failed to load wallet:", error);
@@ -121,15 +134,16 @@ export default function WalletScreen() {
         }
     }, []);
 
-    /* =====================================================
+    /* =========================================================
        FUNCTION: handleTopUp
 
        Runs the development-only wallet top-up operation
        and refreshes the wallet after completion.
-    ===================================================== */
+    ========================================================= */
     const handleTopUp = async (amount: number) => {
         try {
             setTopUpAmount(amount);
+
             setError("");
 
             await devTopUp(amount);
@@ -148,15 +162,61 @@ export default function WalletScreen() {
         }
     };
 
-    /* =====================================================
+    /* =========================================================
+       FUNCTION: handlePayMongoTest
+
+       Creates a ₱100 PayMongo test checkout and opens the
+       hosted checkout URL returned by the backend.
+    ========================================================= */
+    const handlePayMongoTest = async () => {
+        if (payMongoLoading) {
+            return;
+        }
+
+        try {
+            setPayMongoLoading(true);
+
+            setError("");
+
+            const checkout = await createPayMongoCheckout({
+                amount: 100,
+                paymentType: "wallet_top_up",
+            });
+
+            console.log("Vaulty PayMongo checkout:", checkout);
+
+            const canOpen = await Linking.canOpenURL(checkout.checkoutUrl);
+
+            if (!canOpen) {
+                throw new Error(
+                    "Your device could not open the PayMongo checkout.",
+                );
+            }
+
+            await Linking.openURL(checkout.checkoutUrl);
+        } catch (error) {
+            console.error("PayMongo test checkout failed:", error);
+
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to start the PayMongo checkout.",
+            );
+        } finally {
+            setPayMongoLoading(false);
+        }
+    };
+
+    /* =========================================================
        FUNCTION: handleRefresh
 
-       Refreshes the wallet balance and transaction list
+       Refreshes the wallet balance and transaction history
        when the user performs pull-to-refresh.
-    ===================================================== */
+    ========================================================= */
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
+
             setError("");
 
             await loadWallet();
@@ -165,22 +225,21 @@ export default function WalletScreen() {
         }
     };
 
-    /* =====================================================
+    /* =========================================================
        EFFECT: INITIAL WALLET LOAD
 
        Loads wallet information when the screen is first
        mounted.
-    ===================================================== */
+    ========================================================= */
     useEffect(() => {
         loadWallet().finally(() => {
             setLoading(false);
         });
     }, [loadWallet]);
 
-    /* =====================================================
+    /* =========================================================
        LOADING STATE
-    ===================================================== */
-
+    ========================================================= */
     if (loading) {
         return (
             <SRVBackground>
@@ -248,7 +307,7 @@ export default function WalletScreen() {
                 </View>
 
                 {/* =================================================
-                    TOP UP
+                    TOP UP SECTION
                 ================================================= */}
 
                 <View style={styles.topUpSection}>
@@ -264,6 +323,10 @@ export default function WalletScreen() {
                         </View>
                     </View>
 
+                    {/* =================================================
+                        DEVELOPMENT TOP-UP GRID
+                    ================================================= */}
+
                     <View style={styles.topUpGrid}>
                         {[100, 250, 500, 1000].map((amount) => {
                             const active = topUpAmount === amount;
@@ -272,10 +335,14 @@ export default function WalletScreen() {
                                 <Pressable
                                     key={amount}
                                     onPress={() => handleTopUp(amount)}
-                                    disabled={topUpAmount !== null}
+                                    disabled={
+                                        topUpAmount !== null || payMongoLoading
+                                    }
                                     style={({ pressed }) => [
                                         styles.topUpButton,
+
                                         active && styles.topUpButtonActive,
+
                                         pressed && styles.topUpButtonPressed,
                                     ]}
                                 >
@@ -303,6 +370,58 @@ export default function WalletScreen() {
                     <Text style={styles.devNotice}>
                         Development top-ups do not process real payments.
                     </Text>
+
+                    {/* =================================================
+                        PAYMONGO TEST CHECKOUT
+                    ================================================= */}
+
+                    <Pressable
+                        onPress={handlePayMongoTest}
+                        disabled={payMongoLoading}
+                        style={({ pressed }) => [
+                            styles.payMongoTestCard,
+
+                            pressed &&
+                                !payMongoLoading &&
+                                styles.payMongoTestCardPressed,
+
+                            payMongoLoading && styles.payMongoTestCardDisabled,
+                        ]}
+                    >
+                        <View style={styles.payMongoTestIcon}>
+                            {payMongoLoading ? (
+                                <ActivityIndicator
+                                    size="small"
+                                    color={colors.primaryLight}
+                                />
+                            ) : (
+                                <Ionicons
+                                    name="card-outline"
+                                    size={22}
+                                    color={colors.primaryLight}
+                                />
+                            )}
+                        </View>
+
+                        <View style={styles.payMongoTestCopy}>
+                            <Text style={styles.payMongoTestTitle}>
+                                {payMongoLoading
+                                    ? "Opening checkout..."
+                                    : "Test PayMongo Checkout"}
+                            </Text>
+
+                            <Text style={styles.payMongoTestText}>
+                                Open a ₱100 test payment. No real money is
+                                charged.
+                            </Text>
+                        </View>
+
+                        <Ionicons
+                            name="chevron-forward"
+                            size={20}
+                            color={colors.mutedDark}
+                        />
+                    </Pressable>
                 </View>
 
                 {/* =================================================
@@ -371,12 +490,13 @@ export default function WalletScreen() {
                                     key={transaction.id}
                                     style={[
                                         styles.transaction,
+
                                         index < transactions.length - 1 &&
                                             styles.transactionBorder,
                                     ]}
                                 >
                                     {/* =================================
-                                           TRANSACTION ICON
+                                            TRANSACTION ICON
                                         ================================= */}
 
                                     <View style={styles.transactionIcon}>
@@ -394,7 +514,7 @@ export default function WalletScreen() {
                                     </View>
 
                                     {/* =================================
-                                           TRANSACTION DETAILS
+                                            TRANSACTION DETAILS
                                         ================================= */}
 
                                     <View style={styles.transactionCopy}>
@@ -410,7 +530,7 @@ export default function WalletScreen() {
                                     </View>
 
                                     {/* =================================
-                                           TRANSACTION AMOUNT
+                                            TRANSACTION AMOUNT
                                         ================================= */}
 
                                     <Text
@@ -424,6 +544,7 @@ export default function WalletScreen() {
                                         ]}
                                     >
                                         {positive ? "+" : ""}
+
                                         {transaction.amount.toLocaleString()}
                                     </Text>
                                 </View>

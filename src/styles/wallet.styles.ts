@@ -325,4 +325,76 @@ export const walletStyles = StyleSheet.create({
         fontSize: 15,
         fontWeight: "900",
     },
+    /* =========================================================
+   PAYMONGO TEST CARD
+========================================================= */
+
+    payMongoTestCard: {
+        flexDirection: "row",
+
+        alignItems: "center",
+
+        backgroundColor: colors.surface,
+
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+
+        borderRadius: radius.lg,
+
+        padding: spacing.md,
+
+        marginTop: spacing.md,
+    },
+
+    payMongoTestCardPressed: {
+        opacity: 0.82,
+
+        transform: [
+            {
+                scale: 0.99,
+            },
+        ],
+    },
+
+    payMongoTestCardDisabled: {
+        opacity: 0.65,
+    },
+
+    payMongoTestIcon: {
+        width: 46,
+        height: 46,
+
+        borderRadius: 14,
+
+        alignItems: "center",
+        justifyContent: "center",
+
+        backgroundColor: colors.primaryFaint,
+
+        borderWidth: 1,
+        borderColor: colors.borderPurple,
+    },
+
+    payMongoTestCopy: {
+        flex: 1,
+
+        marginLeft: 12,
+        marginRight: 10,
+    },
+
+    payMongoTestTitle: {
+        color: colors.textStrong,
+
+        fontSize: 14,
+        fontWeight: "900",
+    },
+
+    payMongoTestText: {
+        color: colors.muted,
+
+        fontSize: 11,
+        lineHeight: 17,
+
+        marginTop: 3,
+    },
 });

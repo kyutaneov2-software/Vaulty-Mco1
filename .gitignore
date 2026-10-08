@@ -8,6 +8,7 @@ web-build/
 # Environment Variables (Crucial to prevent leaking secrets)
 .env
 .env.*
+supabase/functions/.env
 
 # Editor directories and files
 .vscode/

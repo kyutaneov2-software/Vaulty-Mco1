@@ -444,3 +444,24 @@ verify_jwt = false
 
 [functions.generate-recovery-codes]
 verify_jwt = true
+[functions.create-paymongo-checkout]
+enabled = true
+verify_jwt = false
+import_map = "./functions/create-paymongo-checkout/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/create-paymongo-checkout/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/create-paymongo-checkout/*.html" ]
+
+[functions.paymongo-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/paymongo-webhook/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/paymongo-webhook/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/paymongo-webhook/*.html" ]
